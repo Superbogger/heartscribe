@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+// import HomeView from '../views/AdminView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -7,15 +7,33 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: HomeView,
+      component: () => import('../views/AdminView.vue'),
     },
     {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue'),
+      path: '/guest',
+      component: () => import('../views/UserView_welc1.vue'), // optional wrapper, can replace with GuestLayout.vue
+      children: [
+        {
+          path: '',
+          name: 'guest-welcome',
+          component: () => import('../views/UserView_welc1.vue'),
+        },
+        {
+          path: 'whois',
+          name: 'guest-whois',
+          component: () => import('../views/UserView_whois2.vue'),
+        },
+        {
+          path: 'commit',
+          name: 'guest-commit',
+          component: () => import('../views/UserView_commit3.vue'),
+        },
+        {
+          path: 'gallery',
+          name: 'guest-gallery',
+          component: () => import('../views/UserView_gallery4.vue'),
+        },
+      ],
     },
   ],
 })
