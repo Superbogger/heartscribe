@@ -17,7 +17,7 @@ const store = useStore()
 <style scoped>
 .hero {
   /* VUEHOOK: */
-  background-image: url('@/assets/userimages/IMG_20230824_195820.jpg');
+  background-image: url('@/assets/userimages/pexels-caio-56926.jpg');
 
   background-size: cover;
   background-position: center;
@@ -27,17 +27,24 @@ const store = useStore()
   justify-content: center;
   align-items: center;
   text-align: center;
+
+  color: black;
+  background-color: rgba(255, 255, 255, 0.4);
 }
 
 .content h1 {
-  color: white;
+  /* color: white; */
   font-size: 1.5rem;
   margin-bottom: 1rem;
 }
 
 .content p {
-  color: white;
+  /* color: white; */
   margin-bottom: 1rem;
+  /* background-color: antiquewhite; */
+  background-color: rgba(255, 255, 255, 0.4);
+  border-radius: 30px;
+  padding: 0.5em;
 }
 
 button {

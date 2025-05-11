@@ -10,6 +10,13 @@ const selectedFile = ref<File | null>(null)
 function handleFile(file: File) {
   selectedFile.value = file
 }
+
+function addEntryLocal() {
+  store.addEntry(comment.value)
+  comment.value = ''
+}
+
+const comment = ref('')
 </script>
 
 <template>
@@ -21,21 +28,23 @@ function handleFile(file: File) {
     <main class="main">
       <p class="prompt">Senden Sie eine oder mehrere Nachrichten und Fotos.</p>
 
-      <div class="form-group">
-        <ImageUpload id="upload-photo" @file-selected="handleFile" />
-      </div>
-
-      <div class="form-group">
-        <label for="message">Ihre Nachricht:</label>
-        <textarea
-          id="message"
-          rows="4"
-          placeholder="Ihre Nachricht, max. 300 Zeichen"
-          required
-        ></textarea>
-      </div>
-
-      <button class="submit-button">SENDEN</button>
+      <form @submit.prevent="addEntryLocal()">
+        <div class="form-group">
+          <ImageUpload id="upload-photo" @file-selected="handleFile" />
+          <p v-if="selectedFile">Ausgewählt: {{ selectedFile.name }}</p>
+        </div>
+        <div class="form-group">
+          <label for="message">Ihre Nachricht:</label>
+          <textarea
+            v-model="comment"
+            id="message"
+            rows="4"
+            placeholder="Ihre Nachricht, max. 300 Zeichen"
+            required
+          ></textarea>
+        </div>
+        <button class="submit-button">SENDEN</button>
+      </form>
     </main>
 
     <footer class="footer">
@@ -59,7 +68,7 @@ function handleFile(file: File) {
 }
 
 .header {
-  background-image: url('@/assets/userimages/IMG_20230824_195820.jpg');
+  background-image: url('@/assets/userimages/pexels-caio-56926.jpg');
   background-size: cover;
   background-position: center;
   padding: 3rem;
@@ -123,6 +132,7 @@ textarea {
   color: white;
   font-weight: bold;
   cursor: pointer;
+  margin-top: 8px;
 }
 
 .footer {

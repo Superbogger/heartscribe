@@ -13,10 +13,11 @@ function handleSubmit() {
 </script>
 
 <template>
-  <div class="about">
+  <!-- DEBUG: -->
+  <!-- <div class="about">
     <h1>Page 2</h1>
     <button @click="store.reset()">Reset the UUID</button>
-  </div>
+  </div> -->
 
   <div class="hero">
     <header class="header">
@@ -48,7 +49,7 @@ function handleSubmit() {
 }
 
 .header {
-  background-image: url('@/assets/userimages/IMG_20230824_195820.jpg');
+  background-image: url('@/assets/userimages/pexels-caio-56926.jpg');
   background-size: cover;
   background-position: center;
   padding: 3rem;
