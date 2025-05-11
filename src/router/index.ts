@@ -11,7 +11,7 @@ const router = createRouter({
     },
     {
       path: '/guest',
-      component: () => import('../views/UserView_welc1.vue'), // optional wrapper, can replace with GuestLayout.vue
+      component: () => import('../views/GuestView.vue'), // optional wrapper, can replace with GuestLayout.vue
       children: [
         {
           path: '',

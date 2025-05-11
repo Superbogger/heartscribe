@@ -1,24 +1,17 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import WhoisStep from './UserView_whois2.vue'
+import { useStore } from '@/stores/store'
 
-const step = ref('welcome')
-
-function goToWhois() {
-  step.value = 'whois'
-}
+const store = useStore()
 </script>
 
 <template>
-  <div class="hero" v-if="step === 'welcome'">
+  <div class="hero">
     <div class="content">
       <h1>Bogdan<br />&<br />Manuela</h1>
       <p>Welcome to our wedding! 💍 Send us all your love, pics, and messages! ♥</p>
-      <button @click="goToWhois">EINGEBEN</button>
+      <button @click="store.goTo('whois')">EINGEBEN</button>
     </div>
   </div>
-
-  <WhoisStep v-else />
 </template>
 
 <style scoped>
