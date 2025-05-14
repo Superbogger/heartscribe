@@ -9,10 +9,22 @@ import img4 from '@/assets/debugImages/4.png'
 import img5 from '@/assets/debugImages/5.png'
 import img6 from '@/assets/debugImages/6.png'
 
+// SuperUser, GuestBook form a 1:N relationship
+//SuperUser keeps track of guestbookIDs in guestbooksOwned
+//a guestbook
 export interface SuperUser {
-  id: number //unique identifier for DB integration
+  id: number // unique ID (DB primary key)
   username: string
-  password: string
+  password: string // ideally hashed
+  guestbooksOwned: number[] // array of GuestBook IDs
+}
+
+export interface GuestBook {
+  id: number // unique guestbook ID
+  title: string // e.g. "Manuela & Bogdan Wedding"
+  superUserId: number // links to SuperUser.id
+  createdAt: Date
+  isActive: boolean // optional: for archiving / closing guestbooks
 }
 
 export type GuestUser = {
@@ -28,7 +40,7 @@ export type Entry = {
   date: string
 }
 
-export type GuestEntry = GuestUser & Entry
+export type GuestEntry = GuestUser & Entry & { guestBookId: number }
 
 //current page enum
 export type GuestPage = 'welcome' | 'whois' | 'commit' | 'gallery'
@@ -39,6 +51,8 @@ export type GuestPage = 'welcome' | 'whois' | 'commit' | 'gallery'
 
 export const useStore = defineStore('mainStore', {
   state: () => ({
+    //TODO Manage entries by guestBookID
+    guestBookId: 0,
     entryIDCounter: 0,
     loggedIn: false,
     userToken: '' as string,
@@ -48,6 +62,7 @@ export const useStore = defineStore('mainStore', {
       id: 0,
       username: 'admin',
       password: '123123',
+      guestbooksOwned: [],
     } as SuperUser,
 
     //all guests

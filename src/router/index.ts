@@ -10,7 +10,7 @@ const router = createRouter({
       component: () => import('../views/AdminView.vue'),
     },
     {
-      path: '/guest',
+      path: '/guest/:guestBookId',
       component: () => import('../views/GuestView.vue'), // optional wrapper, can replace with GuestLayout.vue
       children: [
         {
