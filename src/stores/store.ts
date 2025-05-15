@@ -29,7 +29,7 @@ export interface GuestBook {
 
 export type GuestUser = {
   uuid: string
-  name?: string
+  name: string
 }
 
 export type Entry = {
@@ -43,7 +43,7 @@ export type Entry = {
 export type GuestEntry = GuestUser & Entry & { guestBookId: number }
 
 //current page enum
-export type GuestPage = 'welcome' | 'whois' | 'commit' | 'gallery'
+export type GuestPage = 'guest-landing' | 'welcome' | 'whois' | 'commit' | 'gallery'
 
 // export type Wedding = {
 //   blub: number
@@ -52,17 +52,39 @@ export type GuestPage = 'welcome' | 'whois' | 'commit' | 'gallery'
 export const useStore = defineStore('mainStore', {
   state: () => ({
     //TODO Manage entries by guestBookID
-    guestBookId: 0,
+
+    // guestBooks: [] as GuestBook[], // all existing guestbooks
+    //frontend need to cache all ID#s for further access (however superuser:guestbooks is 1:N)
+
+    guestBooks: [
+      {
+        id: 1,
+        title: 'Manuela & Bogdan Wedding',
+        superUserId: 0,
+        createdAt: new Date('2025-05-24T00:00:00'),
+        isActive: true,
+      },
+      {
+        id: 2,
+        title: 'Anna & Max Wedding',
+        superUserId: 0,
+        createdAt: new Date('2024-09-10T00:00:00'),
+        isActive: false,
+      },
+    ] as GuestBook[],
+
+    guestBookId: 0, //current one beeing viewed
     entryIDCounter: 0,
     loggedIn: false,
     userToken: '' as string,
     currentPage: 'welcome' as GuestPage,
 
+    //mock data
     admin: {
       id: 0,
       username: 'admin',
       password: '123123',
-      guestbooksOwned: [],
+      guestbooksOwned: [1, 2],
     } as SuperUser,
 
     //all guests
@@ -84,6 +106,11 @@ export const useStore = defineStore('mainStore', {
           ...user, // merges `uuid` and optionally `name`
         } as GuestEntry
       })
+    },
+
+    //TODO
+    publishedEntriesPerGuestBook(state): GuestEntry[] | null {
+      return null
     },
   },
 
@@ -123,6 +150,10 @@ export const useStore = defineStore('mainStore', {
       }
       this.entries.push(newEntry)
       return newEntry
+    },
+
+    isExistingGuestBookID(guestBookID: number): boolean {
+      return this.guestBooks.some((gb) => gb.id === guestBookID)
     },
 
     init() {

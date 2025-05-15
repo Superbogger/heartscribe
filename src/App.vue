@@ -8,9 +8,7 @@ import { RouterLink, RouterView } from 'vue-router'
     <div class="logo">♥ heartscribe</div>
     <nav>
       <RouterLink to="/">Admin</RouterLink>
-
       <RouterLink to="/guest">Guest</RouterLink>
-      //WORKPENDING:
     </nav>
   </header>
 

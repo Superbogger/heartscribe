@@ -10,7 +10,14 @@ const router = createRouter({
       component: () => import('../views/AdminView.vue'),
     },
     {
-      path: '/guest/:guestBookId',
+      // Guest lands here via NavLinks or if no ID provided
+      path: '/guest',
+      name: 'guest-landing',
+      component: () => import('../views/GuestLandingView.vue'),
+    },
+    {
+      // Guest lands directly at the respective Guestbook
+      path: '/guest/:guestBookID',
       component: () => import('../views/GuestView.vue'), // optional wrapper, can replace with GuestLayout.vue
       children: [
         {
