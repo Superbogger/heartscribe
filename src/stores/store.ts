@@ -28,7 +28,7 @@ export interface GuestBook {
 }
 
 export type GuestUser = {
-  uuid: string
+  guestUUID: string
   name: string
 }
 
@@ -98,15 +98,15 @@ export const useStore = defineStore('mainStore', {
 
   //get computed properties  combine state + business logic
   getters: {
-    publishedGuestEntries(state): GuestEntry[] {
-      return state.entries.map((entry) => {
-        const user = state.users.find((u) => u.uuid === entry.guestUUID)
-        return {
-          ...entry,
-          ...user, // merges `uuid` and optionally `name`
-        } as GuestEntry
-      })
-    },
+    // publishedGuestEntries(state): GuestEntry[] {
+    //   return state.entries.map((entry) => {
+    //     const user = state.users.find((u) => u.uuid === entry.guestUUID)
+    //     return {
+    //       ...entry,
+    //       ...user, // merges `uuid` and optionally `name`
+    //     } as GuestEntry
+    //   })
+    // },
 
     //TODO
     publishedEntriesPerGuestBook(state): GuestEntry[] | null {
@@ -171,8 +171,9 @@ export const useStore = defineStore('mainStore', {
       }
     },
 
-    attachNameToUser(nameOfUser: string) {
-      const user = this.users.find((user) => user.uuid === this.userToken)
+    attachNameToUser(nameOfUser: string) 
+    {
+      const user = this.users.find((user) => user.guestUUID === this.userToken)
 
       if (user) {
         user.name = nameOfUser
