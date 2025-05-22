@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useStore } from '@/stores/store'
+import { useStore, type GuestBook } from '@/stores/store'
 import apiClient from '@/services/apiClient'
 
 const store = useStore()
@@ -74,6 +74,11 @@ async function deleteGuestbook(gb: any) {
     console.error('Failed to delete guestbook', err)
   }
 }
+
+function setCurrGB_switchPage(gb: GuestBook) {
+  store.currentlyViewingGuestBook = gb // only needed for tracking deletion
+  store.currentPage = 'gallery'
+}
 </script>
 
 <template>
@@ -112,7 +117,12 @@ async function deleteGuestbook(gb: any) {
                 class="edit-input"
               />
             </td>
-            <td>{{ gb.publicId }}</td>
+            <td>
+              //TODO:
+              <RouterLink @click="setCurrGB_switchPage(gb)" :to="`/guest/${gb.publicId}/`">
+                {{ gb.publicId }}
+              </RouterLink>
+            </td>
             <td class="responsive-hide">{{ new Date(gb.createdAt).toLocaleDateString() }}</td>
             <td class="responsive-hide">
               <button
@@ -134,6 +144,14 @@ async function deleteGuestbook(gb: any) {
 </template>
 
 <style scoped>
+td a {
+  color: #0077cc;
+  text-decoration: underline;
+  cursor: pointer;
+}
+td a:hover {
+  color: #005fa3;
+}
 .guestbook-table th {
   text-align: center;
 }

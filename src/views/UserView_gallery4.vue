@@ -2,8 +2,37 @@
 import { useStore } from '@/stores/store'
 
 import GalleryItem from '@/components/GalleryItem.vue'
-
+import type { GuestEntry } from '../stores/store'
 const store = useStore()
+
+import { ref, onMounted } from 'vue'
+import apiClient from '@/services/apiClient'
+
+const galleryEntries = ref<GuestEntry[]>([])
+
+onMounted(async () => {
+  try {
+    const response = await apiClient.get(`/api/guest-entries/${store.guestBookId}`)
+    galleryEntries.value = response.data
+    console.log('fetched stuff:', response.data)
+  } catch (err) {
+    console.error('Failed to load gallery entries', err)
+  }
+})
+
+//REWRITE: send tuple of entryID and guestbookID to identify the ENTRY
+//adapt servseide function
+async function handleDelete(entryID: number) {
+  try {
+    await apiClient.delete(
+      `/api/guest-entries/${store.currentlyViewingGuestBook!.publicId}/${entryID}`,
+    )
+    // only remove from UI if the request succeeded
+    galleryEntries.value = galleryEntries.value.filter((e) => e.entryID !== entryID)
+  } catch (err) {
+    console.error('Failed to delete guest entry:', err)
+  }
+}
 </script>
 
 <template>
@@ -21,12 +50,14 @@ const store = useStore()
     <main class="main">
       <div class="entry-grid">
         <GalleryItem
-          v-for="entry in store.publishedGuestEntries"
+          v-for="entry in galleryEntries"
           :key="entry.entryID"
           :date="entry.date"
           :name="entry.name"
           :comment="entry.comment"
           :image-url="entry.imageUrl"
+          :can-delete="store.ownsCurrentGuestbook"
+          @delete="handleDelete"
         />
       </div>
       <!-- v-for loop and display all entries as boxes .. TODO component -->

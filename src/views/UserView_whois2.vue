@@ -7,8 +7,11 @@ const name = ref('')
 
 function handleSubmit() {
   if (!name.value.trim()) return
-  store.attachNameToUser(name.value)
+  // store.attachNameToUser(name.value)
+  // name.value = ''
+  store.currentGuestName = name.value
   name.value = ''
+  store.currentPage = 'commit'
 }
 </script>
 

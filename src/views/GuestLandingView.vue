@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStore } from '@/stores/store'
 
-const guestBookID = ref('')
+const publicGuestBookID = ref('')
 const errorMessages = ref<string[]>([])
 
 const router = useRouter()
@@ -28,19 +28,20 @@ const addError = (msg: string) => {
 }
 
 const goToGuestbook = () => {
-  const id = Number(guestBookID.value)
-  if (guestBookID.value && store.isExistingGuestBookID(id)) {
-    router.push({ name: 'guest-welcome', params: { guestBookID: id.toString() } })
-    guestBookID.value = ''
+  const id = publicGuestBookID.value
+  if (id) {
+    store.goTo('welcome')
+    router.push({ path: `/guest/${id}` })
+    publicGuestBookID.value = ''
   } else {
     let errStr: string
-    if (guestBookID.value === '') {
+    if (publicGuestBookID.value === '') {
       errStr = 'No ID provided'
     } else {
       errStr = 'Incorrect GuestBook ID: '
     }
-    addError(`${errStr} ${guestBookID.value}`)
-    guestBookID.value = ''
+    addError(`${errStr} ${publicGuestBookID.value}`)
+    publicGuestBookID.value = ''
   }
 }
 </script>
@@ -51,7 +52,7 @@ const goToGuestbook = () => {
       <form class="form-guestbook" @submit.prevent="goToGuestbook">
         <div>
           <h2>Enter your Guestbook ID</h2>
-          <input v-model="guestBookID" placeholder="e.g. 42" :class="{ shake: justShook }" />
+          <input v-model="publicGuestBookID" placeholder="e.g. 42" :class="{ shake: justShook }" />
           <button>Open Guestbook</button>
         </div>
       </form>

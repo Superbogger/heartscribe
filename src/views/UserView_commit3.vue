@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import ImageUpload from '@/components/ImageUploadButton.vue'
 import { ref } from 'vue'
+import axios from 'axios'
 
 import { useStore } from '@/stores/store'
 const store = useStore()
@@ -11,9 +12,40 @@ function handleFile(file: File) {
   selectedFile.value = file
 }
 
-function addEntryLocal() {
-  store.addEntry(comment.value)
-  comment.value = ''
+// function addEntryLocal() {
+//   store.addEntry(comment.value)
+//   comment.value = ''
+// }
+
+async function addEntryWithImage() {
+  const formData = new FormData()
+  formData.append('comment', comment.value)
+  formData.append('guestUUID', store.uuid)
+  formData.append('name', store.currentGuestName)
+  formData.append('date', new Date().toISOString())
+
+  if (selectedFile.value) {
+    formData.append('image', selectedFile.value)
+  }
+
+  try {
+    const response = await axios.post(
+      `http://localhost:3001/api/guest-entries/${store.guestBookId}`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      },
+    )
+
+    // Optional: Push to frontend list
+    store.currentViewingEntries.push(response.data)
+    comment.value = ''
+    selectedFile.value = null
+  } catch (err) {
+    console.error('Failed to submit guest entry', err)
+  }
 }
 
 const comment = ref('')
@@ -28,7 +60,7 @@ const comment = ref('')
     <main class="main">
       <p class="prompt">Senden Sie eine oder mehrere Nachrichten und Fotos.</p>
 
-      <form @submit.prevent="addEntryLocal()">
+      <form @submit.prevent="addEntryWithImage()">
         <div class="form-group">
           <ImageUpload id="upload-photo" @file-selected="handleFile" />
           <p v-if="selectedFile">Ausgewählt: {{ selectedFile.name }}</p>

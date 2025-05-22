@@ -2,13 +2,6 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { v4 as uuidv4, type UUIDTypes } from 'uuid'
 
-import img1 from '@/assets/debugImages/1.png'
-import img2 from '@/assets/debugImages/2.png'
-import img3 from '@/assets/debugImages/3.png'
-import img4 from '@/assets/debugImages/4.png'
-import img5 from '@/assets/debugImages/5.png'
-import img6 from '@/assets/debugImages/6.png'
-
 //STORE THESE THINGS IN PINIA  + owned GUESTBOOKS [] +  ENTRIES[] within selected guestbook
 
 // userToken / guestUUID	Stored in localStorage, unique per guest
@@ -65,35 +58,33 @@ export const useStore = defineStore('mainStore', {
     // guestBooks: [] as GuestBook[], // all existing guestbooks
     //frontend need to cache all ID#s for further access (however superuser:guestbooks is 1:N)
 
+    //USER
     guestBooks: [] as GuestBook[],
-
+    loggedIn: false,
+    userToken: '' as string, //elevated rights token
+    currentUserName: '',
     //current one beeing viewed
     guestBookId: 0,
     entryIDCounter: 0,
     currentPage: 'welcome' as GuestPage,
 
-    //current user
-    currentUserName: '',
-    loggedIn: false,
-    userToken: '' as string,
+    //GUEST
+    uuid: '', //standard uuid
+    currentGuestName: '',
 
     currentlyViewingGuestBook: {} as GuestBook | null,
-
-    //all guests
-    users: [] as GuestUser[],
-
     //all entries
-    entries: [] as Entry[],
+    currentViewingEntries: [] as Entry[],
 
     //guestentry -> computed
   }),
 
   //get computed properties  combine state + business logic
   getters: {
-    //TODO
-    // publishedEntriesPerGuestBook(state): GuestEntry[] | null {
-    //   return null
-    // },
+    ownsCurrentGuestbook(state): boolean {
+      if (!state.loggedIn) return false
+      return state.guestBooks.some((gb) => gb.id === state.currentlyViewingGuestBook!.id)
+    },
   },
 
   //mutate state, api requests
@@ -103,13 +94,6 @@ export const useStore = defineStore('mainStore', {
       this.userToken = ''
       this.loggedIn = false
       this.currentUserName = ''
-    },
-
-    // DEBUG: REMOVE
-    getRandomDebugImage(): string {
-      const images = [img1, img2, img3, img4, img5, img6]
-      const index = Math.floor(Math.random() * images.length)
-      return images[index]
     },
 
     getFormattedDate(): string {
@@ -134,41 +118,25 @@ export const useStore = defineStore('mainStore', {
         entryID: this.generateEntryID(),
         guestUUID: this.userToken,
         comment: comment,
-        imageUrl: this.getRandomDebugImage(), //DEBUG: replace with ''
+        imageUrl: '',
         date: this.getFormattedDate(),
       }
-      this.entries.push(newEntry)
+      this.currentViewingEntries.push(newEntry)
       return newEntry
     },
 
-    isExistingGuestBookID(guestBookID: number): boolean {
-      return this.guestBooks.some((gb) => gb.id === guestBookID)
+    isExistingGuestBookID(guestBookID: string): boolean {
+      return this.guestBooks.some((gb) => gb.publicId === guestBookID)
     },
 
     init() {
-      //UUID
       const saved = localStorage.getItem('wedding_guest_token')
-      this.userToken = saved || uuidv4()
-
-      if (!saved) {
-        localStorage.setItem('wedding_guest_token', this.userToken)
+      if (saved) {
+        this.uuid = saved
+      } else {
+        this.uuid = uuidv4()
+        localStorage.setItem('wedding_guest_token', this.uuid)
       }
-
-      //JWT Token
-      const savedToken = localStorage.getItem('heartscribe_admin_token')
-      if (savedToken) {
-        this.loggedIn = true
-        this.userToken = savedToken
-      }
-    },
-
-    attachNameToUser(nameOfUser: string) {
-      const user = this.users.find((user) => user.guestUUID === this.userToken)
-
-      if (user) {
-        user.name = nameOfUser
-        this.currentPage = 'commit'
-      } else console.warn('User not found for current token')
     },
 
     goTo(page: GuestPage) {
