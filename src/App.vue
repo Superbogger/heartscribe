@@ -1,14 +1,19 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
 // import UserView_welc1 from '@/views/UserView_welc1.vue'
+
+import { useStore } from '@/stores/store'
+const store = useStore()
 </script>
 
 <template>
   <header>
     <div class="logo">♥ heartscribe</div>
     <nav>
-      <RouterLink to="/">Admin</RouterLink>
-      <RouterLink to="/guest">Guest</RouterLink>
+      <RouterLink to="/" @click="store.loggedIn ? store.logout() : null">
+        {{ store.loggedIn ? 'Logout:' + store.currentUserName : 'Login' }}
+      </RouterLink>
+      <RouterLink to="/guest">GuestBook</RouterLink>
     </nav>
   </header>
 

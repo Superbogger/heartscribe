@@ -9,10 +9,18 @@ import img4 from '@/assets/debugImages/4.png'
 import img5 from '@/assets/debugImages/5.png'
 import img6 from '@/assets/debugImages/6.png'
 
+//STORE THESE THINGS IN PINIA  + owned GUESTBOOKS [] +  ENTRIES[] within selected guestbook
+
+// userToken / guestUUID	Stored in localStorage, unique per guest
+// currentPage	Navigation state (welcome, commit…)
+// loggedIn	Admin login session
+// inputName, inputComment	Temporary input fields
+// guestBookId	Comes from the route, reused via store
+
 // SuperUser, GuestBook form a 1:N relationship
 //SuperUser keeps track of guestbookIDs in guestbooksOwned
 //a guestbook
-export interface SuperUser {
+export interface User {
   id: number // unique ID (DB primary key)
   username: string
   password: string // ideally hashed
@@ -20,11 +28,12 @@ export interface SuperUser {
 }
 
 export interface GuestBook {
-  id: number // unique guestbook ID
-  title: string // e.g. "Manuela & Bogdan Wedding"
-  superUserId: number // links to SuperUser.id
+  id: number // unique guestbook ID (internal)
+  publicId: string // externally exposed, unguessable
+  title: string
+  userID: number
   createdAt: Date
-  isActive: boolean // optional: for archiving / closing guestbooks
+  isActive: boolean
 }
 
 export type GuestUser = {
@@ -56,36 +65,19 @@ export const useStore = defineStore('mainStore', {
     // guestBooks: [] as GuestBook[], // all existing guestbooks
     //frontend need to cache all ID#s for further access (however superuser:guestbooks is 1:N)
 
-    guestBooks: [
-      {
-        id: 1,
-        title: 'Manuela & Bogdan Wedding',
-        superUserId: 0,
-        createdAt: new Date('2025-05-24T00:00:00'),
-        isActive: true,
-      },
-      {
-        id: 2,
-        title: 'Anna & Max Wedding',
-        superUserId: 0,
-        createdAt: new Date('2024-09-10T00:00:00'),
-        isActive: false,
-      },
-    ] as GuestBook[],
+    guestBooks: [] as GuestBook[],
 
-    guestBookId: 0, //current one beeing viewed
+    //current one beeing viewed
+    guestBookId: 0,
     entryIDCounter: 0,
-    loggedIn: false,
-    userToken: '' as string,
     currentPage: 'welcome' as GuestPage,
 
-    //mock data
-    admin: {
-      id: 0,
-      username: 'admin',
-      password: '123123',
-      guestbooksOwned: [1, 2],
-    } as SuperUser,
+    //current user
+    currentUserName: '',
+    loggedIn: false,
+    userToken: '' as string,
+
+    currentlyViewingGuestBook: {} as GuestBook | null,
 
     //all guests
     users: [] as GuestUser[],
@@ -98,24 +90,21 @@ export const useStore = defineStore('mainStore', {
 
   //get computed properties  combine state + business logic
   getters: {
-    // publishedGuestEntries(state): GuestEntry[] {
-    //   return state.entries.map((entry) => {
-    //     const user = state.users.find((u) => u.uuid === entry.guestUUID)
-    //     return {
-    //       ...entry,
-    //       ...user, // merges `uuid` and optionally `name`
-    //     } as GuestEntry
-    //   })
-    // },
-
     //TODO
-    publishedEntriesPerGuestBook(state): GuestEntry[] | null {
-      return null
-    },
+    // publishedEntriesPerGuestBook(state): GuestEntry[] | null {
+    //   return null
+    // },
   },
 
   //mutate state, api requests
   actions: {
+    logout() {
+      localStorage.removeItem('heartscribe_user_token')
+      this.userToken = ''
+      this.loggedIn = false
+      this.currentUserName = ''
+    },
+
     // DEBUG: REMOVE
     getRandomDebugImage(): string {
       const images = [img1, img2, img3, img4, img5, img6]
@@ -157,6 +146,7 @@ export const useStore = defineStore('mainStore', {
     },
 
     init() {
+      //UUID
       const saved = localStorage.getItem('wedding_guest_token')
       this.userToken = saved || uuidv4()
 
@@ -164,15 +154,15 @@ export const useStore = defineStore('mainStore', {
         localStorage.setItem('wedding_guest_token', this.userToken)
       }
 
-      // Check if user already exists before pushing
-      const exists = this.users.find((user) => user.uuid === this.userToken)
-      if (!exists) {
-        this.users.push({ uuid: this.userToken })
+      //JWT Token
+      const savedToken = localStorage.getItem('heartscribe_admin_token')
+      if (savedToken) {
+        this.loggedIn = true
+        this.userToken = savedToken
       }
     },
 
-    attachNameToUser(nameOfUser: string) 
-    {
+    attachNameToUser(nameOfUser: string) {
       const user = this.users.find((user) => user.guestUUID === this.userToken)
 
       if (user) {
@@ -186,7 +176,7 @@ export const useStore = defineStore('mainStore', {
     },
 
     reset() {
-      localStorage.removeItem('wedding_guest_token')
+      localStorage.removeItem('heartscribe_user_token')
       this.userToken = ''
       this.currentPage = 'welcome'
     },

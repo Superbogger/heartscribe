@@ -1,3 +1,4 @@
+import AdminLoggedInView from '@/views/AdminLoggedInView.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 // import HomeView from '../views/AdminView.vue'
 
@@ -6,8 +7,13 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: () => import('../views/AdminView.vue'),
+      name: 'admin-login',
+      component: () => import('../views/AdminView.vue'), // login/register page
+    },
+    {
+      path: '/user',
+      name: 'admin-panel',
+      component: () => import('../views/AdminLoggedInView.vue'), // shown after login
     },
     {
       // Guest lands here via NavLinks or if no ID provided

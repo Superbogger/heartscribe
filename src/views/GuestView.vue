@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { useStore } from '@/stores/store'
 import { onMounted } from 'vue'
-import { useRoute } from 'vue-router' //
+import { useRoute, useRouter } from 'vue-router'
+import apiClient from '@/services/apiClient'
 
 import Welcome from './UserView_welc1.vue'
 import Whois from './UserView_whois2.vue'
@@ -9,11 +10,26 @@ import Commit from './UserView_commit3.vue'
 import Gallery from './UserView_gallery4.vue'
 
 const store = useStore()
-const route = useRoute() //
+const route = useRoute()
+const router = useRouter()
 
-onMounted(() => {
+onMounted(async () => {
   store.init()
-  store.guestBookId = Number(route.params.guestBookId)
+  const publicId = route.params.guestBookID as string
+
+  try {
+    const response = await apiClient.get(`/api/guestbook/${publicId}`)
+    store.guestBookId = response.data.id
+    store.currentlyViewingGuestBook = response.data
+
+    // Redirect to child route if directly at /guest/:id
+    if (route.path === `/guest/${publicId}`) {
+      router.replace({ name: 'guest-welcome', params: { guestBookID: publicId } })
+    }
+  } catch (err) {
+    console.error('Guestbook not found', err)
+    router.replace('/guest')
+  }
 })
 </script>
 
