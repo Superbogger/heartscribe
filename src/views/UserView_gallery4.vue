@@ -24,9 +24,8 @@ onMounted(async () => {
 //adapt servseide function
 async function handleDelete(entryID: number) {
   try {
-    await apiClient.delete(
-      `/api/guest-entries/${store.currentlyViewingGuestBook!.publicId}/${entryID}`,
-    )
+    const guestBookId = store.guestBookId
+    await apiClient.delete(`/api/guest-entries/${guestBookId}/${entryID}`)
     // only remove from UI if the request succeeded
     galleryEntries.value = galleryEntries.value.filter((e) => e.entryID !== entryID)
   } catch (err) {
@@ -57,7 +56,7 @@ async function handleDelete(entryID: number) {
           :comment="entry.comment"
           :image-url="entry.imageUrl"
           :can-delete="store.ownsCurrentGuestbook"
-          @delete="handleDelete"
+          @delete="() => handleDelete(entry.entryID)"
         />
       </div>
       <!-- v-for loop and display all entries as boxes .. TODO component -->

@@ -59,8 +59,8 @@ export const useStore = defineStore('mainStore', {
     //frontend need to cache all ID#s for further access (however superuser:guestbooks is 1:N)
 
     //USER
-    guestBooks: [] as GuestBook[],
-    loggedIn: false,
+    guestBooks: [] as GuestBook[], // for adminloggedinview
+    loggedIn: false, //frontend toggle, showing of deletion X's in the gallery
     userToken: '' as string, //elevated rights token
     currentUserName: '',
     //current one beeing viewed

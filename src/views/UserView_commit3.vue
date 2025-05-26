@@ -12,12 +12,13 @@ function handleFile(file: File) {
   selectedFile.value = file
 }
 
-// function addEntryLocal() {
-//   store.addEntry(comment.value)
-//   comment.value = ''
-// }
-
 async function addEntryWithImage() {
+  //TODO: Can be undesired if we dont want to reveal user name
+  //if logged in we can post as the loggedIn Name
+  if (store.loggedIn) {
+    store.currentGuestName = store.currentUserName
+  }
+
   const formData = new FormData()
   formData.append('comment', comment.value)
   formData.append('guestUUID', store.uuid)
