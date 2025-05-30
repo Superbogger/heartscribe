@@ -10,6 +10,7 @@ const store = useStore()
   <header>
     <div class="logo">♥ heartscribe</div>
     <nav>
+      <RouterLink to="/user">{{ store.loggedIn ? 'Manage' : '' }}</RouterLink>
       <RouterLink to="/" @click="store.loggedIn ? store.logout() : null">
         {{ store.loggedIn ? 'Logout:' + store.currentUserName : 'Login' }}
       </RouterLink>

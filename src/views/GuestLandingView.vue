@@ -9,6 +9,7 @@ const errorMessages = ref<string[]>([])
 const router = useRouter()
 const store = useStore()
 const justShook = ref(false)
+import apiClient from '@/services/apiClient'
 
 const addError = (msg: string) => {
   if (errorMessages.value.length >= 3) {
@@ -27,22 +28,29 @@ const addError = (msg: string) => {
   }, 3000)
 }
 
-const goToGuestbook = () => {
-  const id = publicGuestBookID.value
-  if (id) {
-    store.goTo('welcome')
-    router.push({ path: `/guest/${id}` })
+const goToGuestbook = async () => {
+  const publicId = publicGuestBookID.value.trim()
+
+  if (!publicId) {
+    addError('No ID provided')
     publicGuestBookID.value = ''
-  } else {
-    let errStr: string
-    if (publicGuestBookID.value === '') {
-      errStr = 'No ID provided'
-    } else {
-      errStr = 'Incorrect GuestBook ID: '
-    }
-    addError(`${errStr} ${publicGuestBookID.value}`)
-    publicGuestBookID.value = ''
+    return
   }
+
+  try {
+    const res = await apiClient.get(`/api/guestbook/${publicId}`) // <- adjust to your API
+    if (res.data) {
+      //store.setCurrentlyViewingGuestBook(res.data) // optional if you preload guestbook
+      store.goTo('welcome')
+      router.push({ path: `/guest/${publicId}` })
+    } else {
+      addError(`Guestbook not found: ${publicId}`)
+    }
+  } catch (err) {
+    addError(`Incorrect GuestBook ID: ${publicId}`)
+  }
+
+  publicGuestBookID.value = ''
 }
 </script>
 

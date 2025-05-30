@@ -69,3 +69,11 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+header a {
+  color: white;
+}
+
+header a:hover {
+  color: #ff8c7a;
+}
