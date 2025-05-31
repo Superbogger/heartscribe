@@ -53,11 +53,10 @@ const router = createRouter({
   ],
 })
 
+//REFACTOR: more efficient to use onMounted ( save some api calls)
 router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem('heartscribe_user_token')
   const store = useStore()
-
-  // If user goes to / and already has a token, redirect to /user
 
   try {
     const res = await apiClient.get('/api/user/me', {
@@ -72,6 +71,7 @@ router.beforeEach(async (to, from, next) => {
     localStorage.removeItem('heartscribe_user_token')
   }
 
+  // If user goes to / and already has a token, redirect to /user
   if (to.name === 'admin-login' && token) {
     return next('/user')
   }
@@ -83,5 +83,44 @@ router.beforeEach(async (to, from, next) => {
 
   next()
 })
+
+// onMounted(async () => {
+//   const token = localStorage.getItem('heartscribe_user_token')
+//   if (!token) return
+
+//   try {
+//     const res = await apiClient.get('/api/user/me', {
+//       headers: { Authorization: `Bearer ${token}` },
+//     })
+//     store.loggedIn = true
+//     store.currentUserName = res.data.name
+//   } catch {
+//     localStorage.removeItem('heartscribe_user_token')
+//   }
+// })
+
+// OR
+
+// {
+//   path: '/user',
+//   name: 'admin-panel',
+//   component: () => import('../views/AdminLoggedInView.vue'),
+//   beforeEnter: async (to, from, next) => {
+//     const token = localStorage.getItem('heartscribe_user_token')
+//     if (!token) return next({ name: 'admin-login' })
+
+//     try {
+//       const res = await apiClient.get('/api/user/me', {
+//         headers: { Authorization: `Bearer ${token}` },
+//       })
+//       store.loggedIn = true
+//       store.currentUserName = res.data.name
+//       next()
+//     } catch {
+//       localStorage.removeItem('heartscribe_user_token')
+//       next({ name: 'admin-login' })
+//     }
+//   },
+// }
 
 export default router
