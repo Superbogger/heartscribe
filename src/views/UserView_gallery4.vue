@@ -4,15 +4,25 @@ import { useStore } from '@/stores/store'
 import GalleryItem from '@/components/GalleryItem.vue'
 import type { GuestEntry } from '../stores/store'
 const store = useStore()
+import { computed } from 'vue'
 
 import { ref, onMounted } from 'vue'
 import apiClient from '@/services/apiClient'
 
 const galleryEntries = ref<GuestEntry[]>([])
 
+const guestbook = computed(() => store.currentlyViewingGuestBook)
+const imageUrl = computed(() => {
+  const img = guestbook.value?.imageUrl
+  if (!img) return ''
+  return img.startsWith('http') ? img : `${import.meta.env.VITE_BACKEND_URL}${img}`
+})
+
 onMounted(async () => {
   try {
-    const response = await apiClient.get(`/api/guest-entries/${store.guestBookId}`)
+    const response = await apiClient.get(
+      `/api/guest-entries/${store.currentlyViewingGuestBook!.publicId}`,
+    )
     galleryEntries.value = response.data
     console.log('fetched stuff:', response.data)
   } catch (err) {
@@ -23,10 +33,15 @@ onMounted(async () => {
 //REWRITE: send tuple of entryID and guestbookID to identify the ENTRY
 //adapt servseide function
 async function handleDelete(entryID: number) {
+  const gb = store.currentlyViewingGuestBook
+  if (!gb) {
+    console.error('No guestbook selected')
+    return
+  }
+
   try {
-    const guestBookId = store.guestBookId
-    await apiClient.delete(`/api/guest-entries/${guestBookId}/${entryID}`)
-    // only remove from UI if the request succeeded
+    await apiClient.delete(`/api/guest-entries/${gb.publicId}/${entryID}`)
+    // Remove the entry from UI after successful deletion
     galleryEntries.value = galleryEntries.value.filter((e) => e.entryID !== entryID)
   } catch (err) {
     console.error('Failed to delete guest entry:', err)
@@ -42,8 +57,8 @@ async function handleDelete(entryID: number) {
   </div> -->
 
   <div class="hero">
-    <header class="header">
-      <h1>Bogdan<br />&<br />Manuela</h1>
+    <header class="header" :style="{ backgroundImage: `url('${imageUrl}')` }">
+      <h1>{{ guestbook!.headerText }}</h1>
     </header>
 
     <main class="main">
@@ -68,7 +83,7 @@ async function handleDelete(entryID: number) {
 
     <button class="gallery-fab" @click="store.goTo('commit')">
       <span class="icon">+</span>
-      <span class="label"></span>
+      <span class="label">Add</span>
     </button>
   </div>
 </template>
@@ -89,7 +104,6 @@ async function handleDelete(entryID: number) {
 }
 
 .header {
-  background-image: url('@/assets/userimages/pexels-caio-56926.jpg');
   background-size: cover;
   background-position: center;
   padding: 0rem;
@@ -100,6 +114,7 @@ async function handleDelete(entryID: number) {
   color: white;
   font-size: 2rem;
   text-shadow: 1px 1px 3px black;
+  padding: 16px;
 }
 
 .main {
@@ -133,7 +148,7 @@ async function handleDelete(entryID: number) {
   background-color: #ff8c7a;
   color: white;
   border-radius: 999px;
-  padding: 0.6rem 1rem;
+  padding: 0.6rem 1.3rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;

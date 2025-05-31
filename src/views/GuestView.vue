@@ -19,7 +19,6 @@ onMounted(async () => {
 
   try {
     const response = await apiClient.get(`/api/guestbook/${publicId}`)
-    store.guestBookId = response.data.id
     store.currentlyViewingGuestBook = response.data
 
     // Redirect to child route if directly at /guest/:id

@@ -2,6 +2,7 @@
 import ImageUpload from '@/components/ImageUploadButton.vue'
 import { ref } from 'vue'
 import axios from 'axios'
+import { computed } from 'vue'
 
 import { useStore } from '@/stores/store'
 const store = useStore()
@@ -31,7 +32,7 @@ async function addEntryWithImage() {
 
   try {
     const response = await axios.post(
-      `http://localhost:3001/api/guest-entries/${store.guestBookId}`,
+      `http://localhost:3001/api/guest-entries/${store.currentlyViewingGuestBook!.publicId}`,
       formData,
       {
         headers: {
@@ -50,12 +51,19 @@ async function addEntryWithImage() {
 }
 
 const comment = ref('')
+
+const guestbook = computed(() => store.currentlyViewingGuestBook)
+const imageUrl = computed(() => {
+  const img = guestbook.value?.imageUrl
+  if (!img) return ''
+  return img.startsWith('http') ? img : `${import.meta.env.VITE_BACKEND_URL}${img}`
+})
 </script>
 
 <template>
   <div class="hero">
-    <header class="header">
-      <h1>Bogdan<br />&<br />Manuela</h1>
+    <header class="header" :style="{ backgroundImage: `url('${imageUrl}')` }">
+      <h1>{{ guestbook!.headerText }}</h1>
     </header>
 
     <main class="main">
@@ -101,7 +109,6 @@ const comment = ref('')
 }
 
 .header {
-  background-image: url('@/assets/userimages/pexels-caio-56926.jpg');
   background-size: cover;
   background-position: center;
   padding: 3rem;

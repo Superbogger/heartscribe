@@ -1,14 +1,21 @@
 <script setup lang="ts">
 import { useStore } from '@/stores/store'
-
+import { computed } from 'vue'
 const store = useStore()
+
+const guestbook = computed(() => store.currentlyViewingGuestBook)
+const imageUrl = computed(() => {
+  const img = guestbook.value?.imageUrl
+  if (!img) return ''
+  return img.startsWith('http') ? img : `${import.meta.env.VITE_BACKEND_URL}${img}`
+})
 </script>
 
 <template>
-  <div class="hero">
+  <div class="hero" :style="{ backgroundImage: `url('${imageUrl}')` }">
     <div class="content">
-      <h1>Bogdan<br />&<br />Manuela</h1>
-      <p>Welcome to our wedding! 💍 Send us all your love, pics, and messages! ♥</p>
+      <h1>{{ guestbook!.headerText }}</h1>
+      <p>{{ guestbook!.footerText }}</p>
       <button @click="store.goTo('whois')">EINGEBEN</button>
     </div>
   </div>
@@ -16,9 +23,6 @@ const store = useStore()
 
 <style scoped>
 .hero {
-  /* VUEHOOK: */
-  background-image: url('@/assets/userimages/pexels-caio-56926.jpg');
-
   background-size: cover;
   background-position: center;
   height: 100vh;

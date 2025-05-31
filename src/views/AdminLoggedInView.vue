@@ -10,6 +10,7 @@ const showExplanation = ref(false)
 
 onMounted(async () => {
   try {
+    //fill owned guestbooks
     const response = await apiClient.get('/api/guestbook')
     store.guestBooks = response.data
   } catch (err) {
@@ -52,6 +53,7 @@ async function toggleActive(gb) {
     console.error('Failed to toggle active state', err)
   }
 }
+
 async function createGuestbook() {
   if (!inputTitle.value.trim()) return
 
@@ -66,7 +68,7 @@ async function createGuestbook() {
     console.error('Failed to create guestbook', err)
   }
 }
-async function deleteGuestbook(gb: any) {
+async function deleteGuestbook(gb: GuestBook) {
   if (!confirm(`Delete "${gb.title}"? This cannot be undone.`)) return
 
   try {
@@ -96,6 +98,40 @@ const customizingId = ref<string | null>(null)
 
 function toggleCustomize(publicID: string) {
   customizingId.value = customizingId.value === publicID ? null : publicID
+}
+
+//FIXME:  add patch for costum text and or image ( both text mandatory, image optional but needs to be uploaded)
+//update header
+async function submitPatch(gb: GuestBook) {
+  try {
+    const formData = new FormData()
+    formData.append('headerText', customHeader.value)
+    formData.append('footerText', customFooter.value)
+    if (selectedFile.value) {
+      formData.append('image', selectedFile.value)
+    }
+
+    const response = await apiClient.patch(`/api/guestbook/${gb.publicId}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+
+    // Update frontend state with new values
+    gb.headerText = customHeader.value
+    gb.footerText = customFooter.value
+    if (response.data.imageUrl) {
+      gb.imageUrl = response.data.imageUrl
+    }
+
+    // Reset UI
+    toggleCustomize('')
+    customHeader.value = ''
+    customFooter.value = ''
+    selectedFile.value = null
+  } catch (err) {
+    console.error('Failed to update guestbook', err)
+  }
 }
 </script>
 
@@ -179,12 +215,33 @@ function toggleCustomize(publicID: string) {
               <transition name="slide">
                 <div class="customizer-bar" v-if="customizingId === gb.publicId">
                   <div class="customizer-inner">
-                    <input type="text" v-model="customHeader" placeholder="Header text" />
-                    <input type="text" v-model="customFooter" placeholder="Footer text" />
-                    <ImageUpload id="upload-photo" @file-selected="handleFile" />
+                    <div>
+                      <label for="title">Header:</label>
+                      <input
+                        id="title"
+                        type="text"
+                        v-model="customHeader"
+                        :placeholder="gb.headerText"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label for="message">Message:</label>
+                      <input
+                        id="message"
+                        type="text"
+                        v-model="customFooter"
+                        :placeholder="gb.footerText"
+                        required
+                      />
+                    </div>
+                    <div class="upload-wrapper">
+                      <ImageUpload id="upload-photo" @file-selected="handleFile" />
+                    </div>
                     <p v-if="selectedFile">Ausgewählt: {{ selectedFile.name }}</p>
                   </div>
-                  <button>Submit</button>
+                  <button @click="submitPatch(gb)">Submit</button>
                 </div>
               </transition>
             </td>
@@ -196,6 +253,9 @@ function toggleCustomize(publicID: string) {
 </template>
 
 <style scoped>
+.upload-wrapper {
+  margin-top: auto;
+}
 strong {
   font-weight: 900;
 }
@@ -225,6 +285,26 @@ strong {
   gap: 1rem;
 }
 
+.customizer-inner > div {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 200px;
+  min-width: 150px;
+  max-width: 100%;
+}
+
+.customizer-inner label {
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+}
+
+.customizer-inner input[type='text'] {
+  padding: 0.4rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  width: 100%;
+}
 .customizer-inner {
   display: flex;
   flex-wrap: wrap;

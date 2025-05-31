@@ -27,6 +27,10 @@ export interface GuestBook {
   userID: number
   createdAt: Date
   isActive: boolean
+  // additional fields
+  headerText: string
+  footerText: string
+  imageUrl: string //use default image if non set
 }
 
 export type GuestUser = {
@@ -64,7 +68,8 @@ export const useStore = defineStore('mainStore', {
     userToken: '' as string, //elevated rights token
     currentUserName: '',
     //current one beeing viewed
-    guestBookId: 0,
+    currentlyViewingGuestBook: {} as GuestBook | null,
+
     entryIDCounter: 0,
     currentPage: 'welcome' as GuestPage,
 
@@ -72,7 +77,6 @@ export const useStore = defineStore('mainStore', {
     uuid: '', //standard uuid
     currentGuestName: '',
 
-    currentlyViewingGuestBook: {} as GuestBook | null,
     //all entries
     currentViewingEntries: [] as Entry[],
 
