@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { v4 as uuidv4 } from 'uuid'
+import apiClient from '@/services/apiClient'
 
 //STORE THESE THINGS IN PINIA  + owned GUESTBOOKS [] +  ENTRIES[] within selected guestbook
 
@@ -109,6 +110,31 @@ export const useStore = defineStore('mainStore', {
       } else {
         this.uuid = uuidv4()
         localStorage.setItem('wedding_guest_token', this.uuid)
+      }
+    },
+
+    async reAuth() {
+      const token = localStorage.getItem('heartscribe_user_token')
+      if (!token) return
+      //reauth if page is beeing refreshed
+      try {
+        const res = await apiClient.get('/api/user/me')
+        this.loggedIn = true
+        this.currentUserName = res.data.name
+      } catch {
+        console.error('Error fetching token')
+        localStorage.removeItem('heartscribe_user_token')
+      }
+    },
+    async loadOwnedGuestbooks() {
+      if (this.loggedIn) {
+        try {
+          const response = await apiClient.get('/api/guestbook')
+          this.guestBooks = response.data
+        } catch (err) {
+          console.log('Error fetching guestbooks for user:' + this.currentUserName, err)
+          localStorage.removeItem('heartscribe_user_token')
+        }
       }
     },
 

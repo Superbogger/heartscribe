@@ -9,8 +9,6 @@ const imageUrl = computed(() => {
   if (!img) return ''
   return img.startsWith('http') ? img : `${import.meta.env.VITE_BACKEND_URL}${img}`
 })
-
-console.log('LOGIN STATUS:' + store.loggedIn)
 </script>
 
 <template>

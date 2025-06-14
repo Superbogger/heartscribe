@@ -8,7 +8,7 @@ import Welcome from './UserView_welc1.vue'
 import Whois from './UserView_whois2.vue'
 import Commit from './UserView_commit3.vue'
 import Gallery from './UserView_gallery4.vue'
-import { HttpStatusCode } from 'axios'
+// import { HttpStatusCode } from 'axios'
 
 const store = useStore()
 const route = useRoute()
@@ -17,6 +17,9 @@ const router = useRouter()
 onMounted(async () => {
   store.init()
   const publicId = route.params.guestBookID as string
+
+  await store.reAuth()
+  await store.loadOwnedGuestbooks()
 
   try {
     const response = await apiClient.get(`/api/guestbook/${publicId}`)

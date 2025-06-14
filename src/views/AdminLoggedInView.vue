@@ -9,8 +9,10 @@ const inputTitle = ref('')
 const showExplanation = ref(false)
 
 onMounted(async () => {
+  await store.reAuth()
+
+  //fill owned guestbooks
   try {
-    //fill owned guestbooks
     const response = await apiClient.get('/api/guestbook')
     store.guestBooks = response.data
   } catch (err) {
