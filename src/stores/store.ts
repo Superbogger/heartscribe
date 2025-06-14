@@ -1,6 +1,5 @@
-import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import { v4 as uuidv4, type UUIDTypes } from 'uuid'
+import { v4 as uuidv4 } from 'uuid'
 
 //STORE THESE THINGS IN PINIA  + owned GUESTBOOKS [] +  ENTRIES[] within selected guestbook
 
@@ -14,17 +13,15 @@ import { v4 as uuidv4, type UUIDTypes } from 'uuid'
 //SuperUser keeps track of guestbookIDs in guestbooksOwned
 //a guestbook
 export interface User {
-  id: number // unique ID (DB primary key)
+  _id: string // unique ID (DB primary key)
   username: string
-  password: string // ideally hashed
-  guestbooksOwned: number[] // array of GuestBook IDs
 }
 
 export interface GuestBook {
-  id: number // unique guestbook ID (internal)
+  _id: string // unique guestbook ID (internal)
   publicId: string // externally exposed, unguessable
   title: string
-  userID: number
+  userID: string //FK
   createdAt: Date
   isActive: boolean
   // additional fields
@@ -33,35 +30,22 @@ export interface GuestBook {
   imageUrl: string //use default image if non set
 }
 
-export type GuestUser = {
+// 🧑‍💬 One guestbook entry
+export interface GuestEntry {
+  _id: string
   guestUUID: string
   name: string
+  comment: string
+  date: string // ISO string, backend returns Date as string
+  imageUrl?: string
+  guestBookId: string // matches _id of GuestBook
 }
-
-export type Entry = {
-  entryID: number //unique identifier for DB integration
-  guestUUID: string
-  imageUrl?: string //optional image
-  comment: string //text
-  date: string
-}
-
-export type GuestEntry = GuestUser & Entry & { guestBookId: number }
 
 //current page enum
 export type GuestPage = 'guest-landing' | 'welcome' | 'whois' | 'commit' | 'gallery'
 
-// export type Wedding = {
-//   blub: number
-// }
-
 export const useStore = defineStore('mainStore', {
   state: () => ({
-    //TODO Manage entries by guestBookID
-
-    // guestBooks: [] as GuestBook[], // all existing guestbooks
-    //frontend need to cache all ID#s for further access (however superuser:guestbooks is 1:N)
-
     //USER
     guestBooks: [] as GuestBook[], // for adminloggedinview
     loggedIn: false, //frontend toggle, showing of deletion X's in the gallery
@@ -74,11 +58,8 @@ export const useStore = defineStore('mainStore', {
     currentPage: 'welcome' as GuestPage,
 
     //GUEST
-    uuid: '', //standard uuid
+    uuid: '', //standard uuid -> inserted at UserView_commit3.vue
     currentGuestName: '',
-
-    //all entries
-    currentViewingEntries: [] as Entry[],
 
     //guestentry -> computed
   }),
@@ -87,7 +68,7 @@ export const useStore = defineStore('mainStore', {
   getters: {
     ownsCurrentGuestbook(state): boolean {
       if (!state.loggedIn) return false
-      return state.guestBooks.some((gb) => gb.id === state.currentlyViewingGuestBook!.id)
+      return state.guestBooks.some((gb) => gb._id === state.currentlyViewingGuestBook!._id)
     },
   },
 
@@ -117,18 +98,6 @@ export const useStore = defineStore('mainStore', {
       return ++this.entryIDCounter
     },
 
-    addEntry(comment: string): Entry {
-      const newEntry: Entry = {
-        entryID: this.generateEntryID(),
-        guestUUID: this.userToken,
-        comment: comment,
-        imageUrl: '',
-        date: this.getFormattedDate(),
-      }
-      this.currentViewingEntries.push(newEntry)
-      return newEntry
-    },
-
     isExistingGuestBookID(guestBookID: string): boolean {
       return this.guestBooks.some((gb) => gb.publicId === guestBookID)
     },
@@ -142,6 +111,36 @@ export const useStore = defineStore('mainStore', {
         localStorage.setItem('wedding_guest_token', this.uuid)
       }
     },
+
+    // THIS VARIANT CONSTITUTES A COMPOSITE LOCALSTORAGE ITEM (remember username)
+    // init() {
+    //   const raw = localStorage.getItem('wedding_guest_token')
+    //   if (raw) {
+    //     const parsed = JSON.parse(raw)
+    //     this.uuid = parsed.uuid
+    //     this.currentGuestName = parsed.name
+    //   } else {
+    //     this.uuid = uuidv4()
+    //     this.currentGuestName = ''
+    //     localStorage.setItem(
+    //       'wedding_guest_token',
+    //       JSON.stringify({
+    //         uuid: this.uuid,
+    //         name: this.currentGuestName,
+    //       }),
+    //     )
+    //   }
+    // },
+    // attachNameToToken(name: string) {
+    //   this.currentGuestName = name
+    //   localStorage.setItem(
+    //     'wedding_guest_token',
+    //     JSON.stringify({
+    //       uuid: this.uuid,
+    //       name: this.currentGuestName,
+    //     }),
+    //   )
+    // },
 
     goTo(page: GuestPage) {
       this.currentPage = page

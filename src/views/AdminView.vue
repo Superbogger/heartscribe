@@ -50,7 +50,7 @@ async function loginUser() {
     store.loggedIn = true
     const token = response.data.token
     localStorage.setItem('heartscribe_user_token', token)
-    router.push('/user') //switch page
+    router.push('/user') //switch to admin panel
   } catch (err) {
     addError((err as AxiosError<{ error: string }>)?.response?.data?.error || 'Unknown error')
     latestErrorMessage.value = 'Login failed'
@@ -69,7 +69,8 @@ async function registerUser() {
       password: inputPassword.value,
     })
 
-    store.loggedIn = true
+    await loginUser()
+
     // Optional: store user ID
   } catch (err) {
     addError((err as AxiosError<{ error: string }>)?.response?.data?.error || 'Unknown error')
@@ -94,7 +95,7 @@ async function registerUser() {
         <label for="password">Password:</label>
         <input v-model="inputPassword" type="password" id="password" required />
       </div>
-      <button type="submit" class="btn-login" @click.prevent="loginUser">Login</button>
+      <button type="button" class="btn-login" @click.prevent="loginUser">Login</button>
       <button type="button" class="btn-register" @click="registerUser">Register</button>
     </form>
     <div class="error-container">
@@ -108,9 +109,9 @@ async function registerUser() {
 </template>
 
 <style scoped>
-* {
+/* * {
   border: 1px solid salmon;
-}
+} */
 
 .error-container {
   width: 100%;

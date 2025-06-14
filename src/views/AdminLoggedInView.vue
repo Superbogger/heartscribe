@@ -94,19 +94,18 @@ function handleFile(file: File) {
 // let costumizeON: boolean = false
 const customHeader = ref('')
 const customFooter = ref('')
-const customizingId = ref<string | null>(null)
+const customizingId = ref<string | null>(null) //acts as boolean
 
 function toggleCustomize(publicID: string) {
   customizingId.value = customizingId.value === publicID ? null : publicID
 }
 
-//FIXME:  add patch for costum text and or image ( both text mandatory, image optional but needs to be uploaded)
-//update header
 async function submitPatch(gb: GuestBook) {
   try {
     const formData = new FormData()
-    formData.append('headerText', customHeader.value)
-    formData.append('footerText', customFooter.value)
+    // apply only non empty-string changes
+    formData.append('headerText', customHeader.value === '' ? gb.headerText : customHeader.value)
+    formData.append('footerText', customFooter.value === '' ? gb.footerText : customFooter.value)
     if (selectedFile.value) {
       formData.append('image', selectedFile.value)
     }
@@ -210,6 +209,7 @@ async function submitPatch(gb: GuestBook) {
               </button>
             </td>
           </tr>
+          <!-- SUBSECTION: -->
           <tr v-if="customizingId === gb.publicId" class="customize-row">
             <td colspan="6">
               <transition name="slide">
@@ -246,6 +246,7 @@ async function submitPatch(gb: GuestBook) {
               </transition>
             </td>
           </tr>
+          <!-- SUBSECTION: -->
         </tbody>
       </table>
     </section>

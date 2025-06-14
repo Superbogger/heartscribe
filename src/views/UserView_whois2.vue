@@ -8,8 +8,6 @@ const name = ref('')
 
 function handleSubmit() {
   if (!name.value.trim()) return
-  // store.attachNameToUser(name.value)
-  // name.value = ''
   store.currentGuestName = name.value
   name.value = ''
   store.currentPage = 'commit'
@@ -24,12 +22,6 @@ const imageUrl = computed(() => {
 </script>
 
 <template>
-  <!-- DEBUG: -->
-  <!-- <div class="about">
-    <h1>Page 2</h1>
-    <button @click="store.reset()">Reset the UUID</button>
-  </div> -->
-
   <div class="hero">
     <header class="header" :style="{ backgroundImage: `url('${imageUrl}')` }">
       <h1>{{ guestbook!.headerText }}</h1>

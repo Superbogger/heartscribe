@@ -8,6 +8,7 @@ import Welcome from './UserView_welc1.vue'
 import Whois from './UserView_whois2.vue'
 import Commit from './UserView_commit3.vue'
 import Gallery from './UserView_gallery4.vue'
+import { HttpStatusCode } from 'axios'
 
 const store = useStore()
 const route = useRoute()
@@ -20,6 +21,12 @@ onMounted(async () => {
   try {
     const response = await apiClient.get(`/api/guestbook/${publicId}`)
     store.currentlyViewingGuestBook = response.data
+
+    //TODO: active/inactive access
+    // if(response.status === HttpStatusCode.Ok && !store.currentlyViewingGuestBook!.isActive)
+    // {
+
+    // }
 
     // Redirect to child route if directly at /guest/:id
     if (route.path === `/guest/${publicId}`) {

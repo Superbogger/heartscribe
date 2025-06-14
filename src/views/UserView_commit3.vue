@@ -3,6 +3,7 @@ import ImageUpload from '@/components/ImageUploadButton.vue'
 import { ref } from 'vue'
 import axios from 'axios'
 import { computed } from 'vue'
+import { onMounted } from 'vue'
 
 import { useStore } from '@/stores/store'
 const store = useStore()
@@ -13,13 +14,13 @@ function handleFile(file: File) {
   selectedFile.value = file
 }
 
-async function addEntryWithImage() {
-  //TODO: Can be undesired if we dont want to reveal user name
-  //if logged in we can post as the loggedIn Name
+onMounted(async () => {
   if (store.loggedIn) {
     store.currentGuestName = store.currentUserName
   }
+})
 
+async function addEntryWithImage() {
   const formData = new FormData()
   formData.append('comment', comment.value)
   formData.append('guestUUID', store.uuid)
@@ -41,8 +42,6 @@ async function addEntryWithImage() {
       },
     )
 
-    // Optional: Push to frontend list
-    store.currentViewingEntries.push(response.data)
     comment.value = ''
     selectedFile.value = null
   } catch (err) {
@@ -84,7 +83,9 @@ const imageUrl = computed(() => {
             required
           ></textarea>
         </div>
-        <button class="submit-button">SENDEN</button>
+        <div class="submitORchngUSER">
+          <button class="submit-button">SEND AS {{ store.currentGuestName }}</button>
+        </div>
       </form>
     </main>
 
@@ -101,6 +102,11 @@ const imageUrl = computed(() => {
 </template>
 
 <style scoped>
+/* .submitORchngUSER {
+  display: flex;
+  gap: 8px;
+} */
+
 .hero {
   display: flex;
   flex-direction: column;
@@ -174,6 +180,10 @@ textarea {
   cursor: pointer;
   margin-top: 8px;
 }
+
+/* .submitORchngUSER .differentUser {
+  background-color: #999;
+} */
 
 .footer {
   background-color: #1c1c1c;

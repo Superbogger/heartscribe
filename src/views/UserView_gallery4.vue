@@ -30,9 +30,8 @@ onMounted(async () => {
   }
 })
 
-//REWRITE: send tuple of entryID and guestbookID to identify the ENTRY
 //adapt servseide function
-async function handleDelete(entryID: number) {
+async function handleDelete(entryID: string) {
   const gb = store.currentlyViewingGuestBook
   if (!gb) {
     console.error('No guestbook selected')
@@ -42,7 +41,7 @@ async function handleDelete(entryID: number) {
   try {
     await apiClient.delete(`/api/guest-entries/${gb.publicId}/${entryID}`)
     // Remove the entry from UI after successful deletion
-    galleryEntries.value = galleryEntries.value.filter((e) => e.entryID !== entryID)
+    galleryEntries.value = galleryEntries.value.filter((e) => e._id !== entryID)
   } catch (err) {
     console.error('Failed to delete guest entry:', err)
   }
@@ -50,12 +49,6 @@ async function handleDelete(entryID: number) {
 </script>
 
 <template>
-  <!-- DEBUG: -->
-  <!-- <div class="about">
-    <h1>Page 2</h1>
-    <button @click="store.reset()">Reset the UUID</button>
-  </div> -->
-
   <div class="hero">
     <header class="header" :style="{ backgroundImage: `url('${imageUrl}')` }">
       <h1>{{ guestbook!.headerText }}</h1>
@@ -65,13 +58,13 @@ async function handleDelete(entryID: number) {
       <div class="entry-grid">
         <GalleryItem
           v-for="entry in galleryEntries"
-          :key="entry.entryID"
+          :key="entry._id"
           :date="entry.date"
           :name="entry.name"
           :comment="entry.comment"
           :image-url="entry.imageUrl"
           :can-delete="store.ownsCurrentGuestbook"
-          @delete="() => handleDelete(entry.entryID)"
+          @delete="() => handleDelete(entry._id)"
         />
       </div>
       <!-- v-for loop and display all entries as boxes .. TODO component -->
