@@ -1,9 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 // import HomeView from '../views/AdminView.vue'
-import { useStore } from '@/stores/store'
-import apiClient from '@/services/apiClient'
-import { onMounted } from 'vue'
-
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [

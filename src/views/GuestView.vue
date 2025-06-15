@@ -17,7 +17,6 @@ const router = useRouter()
 onMounted(async () => {
   store.init()
   const publicId = route.params.guestBookID as string
-
   await store.reAuth()
   await store.loadOwnedGuestbooks()
 
@@ -46,5 +45,5 @@ onMounted(async () => {
   <Welcome v-if="store.currentPage === 'welcome'" />
   <Whois v-else-if="store.currentPage === 'whois'" />
   <Commit v-else-if="store.currentPage === 'commit'" />
-  <Gallery v-else />
+  <Gallery v-else-if="store.currentPage === 'gallery'" />
 </template>

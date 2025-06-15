@@ -56,7 +56,7 @@ export const useStore = defineStore('mainStore', {
     currentlyViewingGuestBook: {} as GuestBook | null,
 
     entryIDCounter: 0,
-    currentPage: 'welcome' as GuestPage,
+    currentPage: null as GuestPage | null,
 
     //GUEST
     uuid: '', //standard uuid -> inserted at UserView_commit3.vue
@@ -70,6 +70,25 @@ export const useStore = defineStore('mainStore', {
     ownsCurrentGuestbook(state): boolean {
       if (!state.loggedIn) return false
       return state.guestBooks.some((gb) => gb._id === state.currentlyViewingGuestBook!._id)
+    },
+
+    isCurrentGBactive(state): boolean {
+      const gb = state.currentlyViewingGuestBook
+      if (!gb) return false //null guard
+
+      return gb.isActive
+    },
+
+    isAllowedAccess(state): boolean {
+      const gb = state.currentlyViewingGuestBook
+      if (!gb) return false //null guard
+
+      if (this.ownsCurrentGuestbook) {
+        return true
+      } //✅ owns it
+
+      //does not own it, depending on active state now
+      return gb.isActive
     },
   },
 
@@ -113,6 +132,9 @@ export const useStore = defineStore('mainStore', {
       }
     },
 
+    //---------------------------------------------------
+    //METHODS THAT SHOULD BE CALLED WHEN USER IS LOGGED IN
+    // - AdminLoggedInView
     async reAuth() {
       const token = localStorage.getItem('heartscribe_user_token')
       if (!token) return
@@ -126,6 +148,8 @@ export const useStore = defineStore('mainStore', {
         localStorage.removeItem('heartscribe_user_token')
       }
     },
+
+    //GuestView (root of all guestpages)
     async loadOwnedGuestbooks() {
       if (this.loggedIn) {
         try {
@@ -137,6 +161,7 @@ export const useStore = defineStore('mainStore', {
         }
       }
     },
+    //---------------------------------------------------
 
     // THIS VARIANT CONSTITUTES A COMPOSITE LOCALSTORAGE ITEM (remember username)
     // init() {
