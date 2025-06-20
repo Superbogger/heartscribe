@@ -5,10 +5,12 @@ const apiClient = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
+//register req interceptor, modify every outgoing HTTP request
+//headers are autmatically attached here
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('heartscribe_user_token')
   if (token) {
-    config.headers.Authorization = `Bearer ${token}` // <- this is required!
+    config.headers.Authorization = `Bearer ${token}`
   }
   return config
 })

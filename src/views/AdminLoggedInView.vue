@@ -97,6 +97,7 @@ function handleFile(file: File) {
 const customHeader = ref('')
 const customFooter = ref('')
 const customizingId = ref<string | null>(null) //acts as boolean
+const openMenuId = ref<string | null>(null)
 
 function toggleCustomize(publicID: string) {
   customizingId.value = customizingId.value === publicID ? null : publicID
@@ -167,10 +168,11 @@ async function submitPatch(gb: GuestBook) {
           <tr>
             <th>Title</th>
             <th>Share</th>
-            <th>Costumize</th>
+            <th class="responsive-only">Actions</th>
+            <th class="responsive-hide">Costumize</th>
             <th class="responsive-hide">Created</th>
             <th class="responsive-hide">Active</th>
-            <th class="responsive-hide">Actions</th>
+            <th class="responsive-hide">Delete?</th>
           </tr>
         </thead>
         <tbody v-for="gb in store.guestBooks" :key="gb.publicId">
@@ -192,7 +194,7 @@ async function submitPatch(gb: GuestBook) {
                 {{ gb.publicId }}
               </RouterLink>
             </td>
-            <td>
+            <td class="responsive-hide">
               <button class="costumizeGB" @click="toggleCustomize(gb.publicId)">Customize</button>
             </td>
             <td class="responsive-hide">{{ new Date(gb.createdAt).toLocaleDateString() }}</td>
@@ -205,10 +207,27 @@ async function submitPatch(gb: GuestBook) {
                 {{ gb.isActive ? 'Active' : 'Inactive' }}
               </button>
             </td>
-            <td>
-              <button class="btn-delete responsive-hide" @click="deleteGuestbook(gb)">
-                Delete
+            <td class="responsive-hide">
+              <button class="btn-delete" @click="deleteGuestbook(gb)">Delete</button>
+            </td>
+            <td class="responsive-only">
+              <button
+                class="expander"
+                @click="openMenuId = openMenuId === gb.publicId ? null : gb.publicId"
+              >
+                ⋮
               </button>
+              <div v-if="openMenuId === gb.publicId" class="dropdown-menu">
+                <button class="costumizeGB" @click="toggleCustomize(gb.publicId)">Customize</button>
+                <button
+                  class="btn-toggle"
+                  @click="toggleActive(gb)"
+                  :class="{ active: gb.isActive, inactive: !gb.isActive }"
+                >
+                  {{ gb.isActive ? 'Active' : 'Inactive' }}
+                </button>
+                <button class="btn-delete" @click="deleteGuestbook(gb)">Delete</button>
+              </div>
             </td>
           </tr>
           <!-- SUBSECTION: -->
@@ -259,6 +278,12 @@ async function submitPatch(gb: GuestBook) {
 .upload-wrapper {
   margin-top: auto;
 }
+
+/* * {
+  border: 1px solid salmon;
+  box-sizing: border-box;
+} */
+
 strong {
   font-weight: 900;
 }
@@ -474,7 +499,6 @@ td a:hover {
   text-align: left;
 }
 
-.btn-edit,
 .btn-delete {
   margin-right: 0.5rem;
   padding: 0.4rem 0.8rem;
@@ -484,14 +508,32 @@ td a:hover {
   font-weight: bold;
 }
 
-.btn-edit {
-  background-color: #2196f3;
-  color: white;
-}
-
 .btn-delete {
   background-color: #f44336;
   color: white;
+}
+
+.expander {
+  background-color: #eee;
+  border: none;
+  border-radius: 6px;
+  font-size: 1.2rem;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+  margin: 0 auto; /* centers in the <td> */
+  margin-bottom: 0.5rem;
+}
+
+.expander:hover {
+  background-color: #ccc;
+}
+
+.expander:focus {
+  outline: 2px solid #aaa;
 }
 
 /* mq */
@@ -499,9 +541,35 @@ td a:hover {
   display: table-cell;
 }
 
+.responsive-only {
+  display: none;
+}
+
 @media (max-width: 600px) {
   .responsive-hide {
     display: none;
+  }
+
+  .costumizeGB,
+  .btn-toggle,
+  .btn-delete {
+    width: 100%;
+    min-width: 100px;
+    text-align: center;
+    font-size: 0.95rem;
+    padding: 0.5rem 0.75rem;
+    box-sizing: border-box;
+  }
+
+  .dropdown-menu {
+    display: flex;
+    gap: 0.5rem;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .responsive-only {
+    display: table-cell;
   }
 }
 </style>
