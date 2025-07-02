@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useStore, type GuestBook } from '@/stores/store'
 import apiClient from '@/services/apiClient'
 import ImageUpload from '@/components/ImageUploadButton.vue'
+import { joinGuestbookRooms, joinGuestbookRoom, leaveGuestBook } from '@/services/socketClient'
 
 const store = useStore()
 const inputTitle = ref('')
@@ -15,6 +16,9 @@ onMounted(async () => {
   try {
     const response = await apiClient.get('/api/guestbook')
     store.guestBooks = response.data
+
+    const guestbookInterests = store.guestBooks.map((gb) => gb.publicId)
+    joinGuestbookRooms(guestbookInterests)
   } catch (err) {
     console.error('Failed to load guestbooks', err)
   }
@@ -59,10 +63,14 @@ async function toggleActive(gb) {
 async function createGuestbook() {
   if (!inputTitle.value.trim()) return
 
+  let response
+
   try {
-    const response = await apiClient.post('/api/guestbook', {
+    response = await apiClient.post('/api/guestbook', {
       title: inputTitle.value,
     })
+
+    joinGuestbookRoom(response.data.publicId)
 
     store.guestBooks.push(response.data)
     inputTitle.value = '' //reset inpu title
@@ -76,6 +84,8 @@ async function deleteGuestbook(gb: GuestBook) {
   try {
     await apiClient.delete(`/api/guestbook/${gb.publicId}`)
     store.guestBooks = store.guestBooks.filter((g) => g.publicId !== gb.publicId)
+
+    leaveGuestBook([gb.publicId])
   } catch (err) {
     console.error('Failed to delete guestbook', err)
   }
@@ -139,6 +149,7 @@ async function submitPatch(gb: GuestBook) {
 
 <template>
   <div class="hero">
+    {{ store.socketId }}
     <section class="inputNewGuestBook">
       <h2>
         New GuestBook<span class="blueQuestionmark" @click="showExplanation = !showExplanation"

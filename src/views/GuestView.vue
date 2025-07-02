@@ -15,7 +15,6 @@ const route = useRoute()
 const router = useRouter()
 
 onMounted(async () => {
-  store.init()
   const publicId = route.params.guestBookID as string
   await store.reAuth()
   await store.loadOwnedGuestbooks()

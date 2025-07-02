@@ -39,8 +39,9 @@ async function handleDelete(entryID: string) {
   }
 
   try {
-    await apiClient.delete(`/api/guest-entries/${gb.publicId}/${entryID}`)
-    // Remove the entry from UI after successful deletion
+    await apiClient.delete(`/api/guest-entries/${gb.publicId}/${entryID}`, {
+      headers: { 'x-socket-id': store.socketId },
+    })
     galleryEntries.value = galleryEntries.value.filter((e) => e._id !== entryID)
   } catch (err) {
     console.error('Failed to delete guest entry:', err)

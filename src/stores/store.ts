@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { v4 as uuidv4 } from 'uuid'
 import apiClient from '@/services/apiClient'
+import { leaveGuestBook, onSocketConnected } from '@/services/socketClient'
 
 //STORE THESE THINGS IN PINIA  + owned GUESTBOOKS [] +  ENTRIES[] within selected guestbook
 
@@ -29,6 +30,7 @@ export interface GuestBook {
   headerText: string
   footerText: string
   imageUrl: string //use default image if non set
+  entries: string[]
 }
 
 // 🧑‍💬 One guestbook entry
@@ -63,6 +65,8 @@ export const useStore = defineStore('mainStore', {
     currentGuestName: '',
 
     //guestentry -> computed
+
+    socketId: '' as string,
   }),
 
   //get computed properties  combine state + business logic
@@ -99,6 +103,8 @@ export const useStore = defineStore('mainStore', {
       this.userToken = ''
       this.loggedIn = false
       this.currentUserName = ''
+      const personalGuestBooksID = this.guestBooks.map((gb) => gb.publicId)
+      leaveGuestBook(personalGuestBooksID)
     },
 
     getFormattedDate(): string {
@@ -123,6 +129,9 @@ export const useStore = defineStore('mainStore', {
     },
 
     init() {
+      onSocketConnected((id) => {
+        this.socketId = id
+      })
       const saved = localStorage.getItem('wedding_guest_token')
       if (saved) {
         this.uuid = saved
