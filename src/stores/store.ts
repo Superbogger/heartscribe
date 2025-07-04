@@ -1,7 +1,9 @@
 import { defineStore } from 'pinia'
 import { v4 as uuidv4 } from 'uuid'
 import apiClient from '@/services/apiClient'
-import { leaveGuestBook, onSocketConnected } from '@/services/socketClient'
+import { io, Socket } from 'socket.io-client'
+
+const URL = 'http://localhost:3003' // adjust to your backend
 
 //STORE THESE THINGS IN PINIA  + owned GUESTBOOKS [] +  ENTRIES[] within selected guestbook
 
@@ -56,6 +58,7 @@ export const useStore = defineStore('mainStore', {
     currentUserName: '',
     //current one beeing viewed
     currentlyViewingGuestBook: {} as GuestBook | null,
+    currentlyViewingGuestBookId: '' as string,
 
     entryIDCounter: 0,
     currentPage: null as GuestPage | null,
@@ -65,7 +68,7 @@ export const useStore = defineStore('mainStore', {
     currentGuestName: '',
 
     //guestentry -> computed
-
+    socket: io(URL) as Socket,
     socketId: '' as string,
   }),
 
@@ -98,14 +101,70 @@ export const useStore = defineStore('mainStore', {
 
   //mutate state, api requests
   actions: {
+    // SOCKET IO ---------------------------------------------------------------------------
+    disconnectSocket() {
+      if (this.socket && this.socket.connected) {
+        this.socket.disconnect()
+      }
+    },
+
+    joinGuestbookRoom(publicId: string) {
+      if (this.socket && this.socket.connected) {
+        this.socket.emit('joinGuestbook', [publicId])
+      }
+    },
+
+    joinGuestbookRooms(publicIds: string[]) {
+      if (this.socket && this.socket.connected) {
+        this.socket.emit('joinGuestbook', publicIds)
+      }
+    },
+
+    leaveGuestBook(publicIds: string[]) {
+      if (this.socket && this.socket.connected) {
+        console.log('➡️ leaveGuestBook called', publicIds)
+        this.socket.emit('leaveGuestbook', publicIds)
+      }
+    },
+
+    onSocketConnected(callback: (id: string) => void) {
+      if (this.socket) {
+        if (this.socket.connected && this.socket.id) {
+          callback(this.socket.id)
+        }
+        this.socket.on('connect', () => {
+          if (this.socket && this.socket.id) {
+            callback(this.socket.id)
+          }
+        })
+      }
+    },
+
+    connectSocket() {
+      if (!this.socket.connected) {
+        this.socket.connect()
+      }
+    },
+
     logout() {
       localStorage.removeItem('heartscribe_user_token')
       this.userToken = ''
       this.loggedIn = false
       this.currentUserName = ''
       const personalGuestBooksID = this.guestBooks.map((gb) => gb.publicId)
-      leaveGuestBook(personalGuestBooksID)
+      this.leaveGuestBook(personalGuestBooksID)
     },
+
+    registerCurrentlyViewing(publicId_new: string) {
+      if (this.currentlyViewingGuestBookId) {
+        this.leaveGuestBook([this.currentlyViewingGuestBookId])
+      }
+
+      this.joinGuestbookRoom(publicId_new)
+      this.currentlyViewingGuestBookId = publicId_new
+    },
+
+    // SOCKET IO ---------------------------------------------------------------------------
 
     getFormattedDate(): string {
       const date = new Date()
@@ -129,7 +188,7 @@ export const useStore = defineStore('mainStore', {
     },
 
     init() {
-      onSocketConnected((id) => {
+      this.onSocketConnected((id) => {
         this.socketId = id
       })
       const saved = localStorage.getItem('wedding_guest_token')

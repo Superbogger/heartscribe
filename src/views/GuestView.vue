@@ -23,11 +23,7 @@ onMounted(async () => {
     const response = await apiClient.get(`/api/guestbook/${publicId}`)
     store.currentlyViewingGuestBook = response.data
 
-    //TODO: active/inactive access
-    // if(response.status === HttpStatusCode.Ok && !store.currentlyViewingGuestBook!.isActive)
-    // {
-
-    // }
+    store.registerCurrentlyViewing(response.data.publicId) // register/unregister of the guestbook beeing actively viewed
 
     // Redirect to child route if directly at /guest/:id
     if (route.path === `/guest/${publicId}`) {

@@ -4,12 +4,11 @@ import { RouterLink, RouterView } from 'vue-router'
 
 import { useStore } from '@/stores/store'
 import { onMounted } from 'vue'
-import { connectSocket } from './services/socketClient'
 const store = useStore()
 
 onMounted(() => {
   try {
-    connectSocket()
+    store.connectSocket()
     store.init() //give a unique tracker UUID per user
   } catch (err) {
     console.error(err)

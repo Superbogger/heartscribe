@@ -31,6 +31,10 @@ async function addEntryWithImage() {
     formData.append('image', selectedFile.value)
   }
 
+  // await apiClient.delete(`/api/guest-entries/${gb.publicId}/${entryID}`, {
+  //     headers: { 'x-socket-id': store.socketId },
+  //   })
+
   try {
     const response = await axios.post(
       `http://localhost:3001/api/guest-entries/${store.currentlyViewingGuestBook!.publicId}`,
@@ -38,6 +42,7 @@ async function addEntryWithImage() {
       {
         headers: {
           'Content-Type': 'multipart/form-data',
+          'x-socket-id': store.socketId,
         },
       },
     )
