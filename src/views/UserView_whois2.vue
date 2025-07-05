@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useStore } from '@/stores/store'
 import { ref } from 'vue'
-import { computed } from 'vue'
 
 const store = useStore()
 const name = ref('')
@@ -12,19 +11,12 @@ function handleSubmit() {
   name.value = ''
   store.currentPage = 'commit'
 }
-
-const guestbook = computed(() => store.currentlyViewingGuestBook)
-const imageUrl = computed(() => {
-  const img = guestbook.value?.imageUrl
-  if (!img) return ''
-  return img.startsWith('http') ? img : `${import.meta.env.VITE_BACKEND_URL}${img}`
-})
 </script>
 
 <template>
   <div class="hero">
-    <header class="header" :style="{ backgroundImage: `url('${imageUrl}')` }">
-      <h1>{{ guestbook!.headerText }}</h1>
+    <header class="header" :style="{ backgroundImage: `url('${store.computeImageURL}')` }">
+      <h1>{{ store.currentlyViewingGuestBook!.headerText }}</h1>
     </header>
 
     <main class="main">

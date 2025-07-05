@@ -9,7 +9,6 @@ const errorMessages = ref<string[]>([])
 const router = useRouter()
 const store = useStore()
 const justShook = ref(false)
-import apiClient from '@/services/apiClient'
 
 const addError = (msg: string) => {
   if (errorMessages.value.length >= 3) {
@@ -38,7 +37,9 @@ const goToGuestbook = async () => {
   }
 
   try {
-    const res = await apiClient.get(`/api/guestbook/${publicId}`) // <- adjust to your API
+    await store.waitForApiClientReady()
+
+    const res = await store.apiClient!.get(`/api/guestbook/${publicId}`) // <- adjust to your API
     if (res.data) {
       //store.setCurrentlyViewingGuestBook(res.data) // optional if you preload guestbook
       store.goTo('welcome')

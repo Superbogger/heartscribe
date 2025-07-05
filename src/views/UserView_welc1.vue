@@ -1,14 +1,6 @@
 <script setup lang="ts">
 import { useStore } from '@/stores/store'
-import { computed } from 'vue'
 const store = useStore()
-
-const guestbook = computed(() => store.currentlyViewingGuestBook)
-const imageUrl = computed(() => {
-  const img = guestbook.value?.imageUrl
-  if (!img) return ''
-  return img.startsWith('http') ? img : `${import.meta.env.VITE_BACKEND_URL}${img}`
-})
 
 // !store.currentlyViewingGuestBook!.isActive || store.ownsCurrentGuestbook
 
@@ -21,10 +13,10 @@ const onEnterClick = () => {
 //TODO color changes for disabled //ALLOW Owning user to still access normally too
 
 <template>
-  <div class="hero" :style="{ backgroundImage: `url('${imageUrl}')` }">
+  <div class="hero" :style="{ backgroundImage: `url('${store.computeImageURL}')` }">
     <div class="content">
-      <h1>{{ guestbook!.headerText }}</h1>
-      <p class="footerText">{{ guestbook!.footerText }}</p>
+      <h1>{{ store.currentlyViewingGuestBook!.headerText }}</h1>
+      <p class="footerText">{{ store.currentlyViewingGuestBook!.footerText }}</p>
       <button :disabled="!store.isAllowedAccess" @click="onEnterClick">EINGEBEN</button>
       <p class="blockedNotice" v-if="!store.isCurrentGBactive">
         This guestbook has been deactivated by its owner.

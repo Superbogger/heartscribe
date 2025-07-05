@@ -2,28 +2,21 @@
 import { useStore } from '@/stores/store'
 
 import GalleryItem from '@/components/GalleryItem.vue'
-import type { GuestEntry } from '../stores/store'
 const store = useStore()
-import { computed } from 'vue'
+import { onMounted } from 'vue'
 
-import { ref, onMounted } from 'vue'
-import apiClient from '@/services/apiClient'
-
-const galleryEntries = ref<GuestEntry[]>([])
-
-const guestbook = computed(() => store.currentlyViewingGuestBook)
-const imageUrl = computed(() => {
-  const img = guestbook.value?.imageUrl
-  if (!img) return ''
-  return img.startsWith('http') ? img : `${import.meta.env.VITE_BACKEND_URL}${img}`
-})
+//const guestbook = computed(() => store.currentlyViewingGuestBook)
 
 onMounted(async () => {
+  console.log('Ive been switched to: GALLERY')
+
   try {
-    const response = await apiClient.get(
+    await store.waitForApiClientReady()
+
+    const response = await store.apiClient!.get(
       `/api/guest-entries/${store.currentlyViewingGuestBook!.publicId}`,
     )
-    galleryEntries.value = response.data
+    store.currentlyViewingGuestEntries = response.data
     console.log('fetched stuff:', response.data)
   } catch (err) {
     console.error('Failed to load gallery entries', err)
@@ -39,10 +32,12 @@ async function handleDelete(entryID: string) {
   }
 
   try {
-    await apiClient.delete(`/api/guest-entries/${gb.publicId}/${entryID}`, {
-      headers: { 'x-socket-id': store.socketId },
-    })
-    galleryEntries.value = galleryEntries.value.filter((e) => e._id !== entryID)
+    await store.waitForApiClientReady()
+
+    await store.apiClient!.delete(`/api/guest-entries/${gb.publicId}/${entryID}`)
+    store.currentlyViewingGuestEntries = store.currentlyViewingGuestEntries.filter(
+      (e) => e._id !== entryID,
+    )
   } catch (err) {
     console.error('Failed to delete guest entry:', err)
   }
@@ -51,14 +46,14 @@ async function handleDelete(entryID: string) {
 
 <template>
   <div class="hero">
-    <header class="header" :style="{ backgroundImage: `url('${imageUrl}')` }">
-      <h1>{{ guestbook!.headerText }}</h1>
+    <header class="header" :style="{ backgroundImage: `url('${store.computeImageURL}')` }">
+      <h1>{{ store.currentlyViewingGuestBook!.headerText }}</h1>
     </header>
 
     <main class="main">
       <div class="entry-grid">
         <GalleryItem
-          v-for="entry in galleryEntries"
+          v-for="entry in store.currentlyViewingGuestEntries"
           :key="entry._id"
           :date="entry.date"
           :name="entry.name"

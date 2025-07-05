@@ -7,8 +7,9 @@ import { onMounted } from 'vue'
 const store = useStore()
 
 onMounted(() => {
+  console.log('I run only once 🐗🐗🐗😋😋😋😋')
+
   try {
-    store.connectSocket()
     store.init() //give a unique tracker UUID per user
   } catch (err) {
     console.error(err)

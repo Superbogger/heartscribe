@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useStore, type GuestBook } from '@/stores/store'
-import apiClient from '@/services/apiClient'
 import ImageUpload from '@/components/ImageUploadButton.vue'
 
 const store = useStore()
@@ -13,11 +12,13 @@ onMounted(async () => {
 
   //fill owned guestbooks
   try {
-    const response = await apiClient.get('/api/guestbook')
+    await store.waitForApiClientReady()
+
+    const response = await store.apiClient!.get('/api/guestbook')
     store.guestBooks = response.data
 
-    const guestbookInterests = store.guestBooks.map((gb) => gb.publicId)
-    store.joinGuestbookRooms(guestbookInterests)
+    // const guestbookInterests = store.guestBooks.map((gb) => gb.publicId)
+    // store.joinGuestbookRooms(guestbookInterests)
   } catch (err) {
     console.error('Failed to load guestbooks', err)
   }
@@ -33,7 +34,9 @@ function startEdit(gb) {
 
 async function saveEdit(gb) {
   try {
-    const response = await apiClient.patch(`/api/guestbook/${gb.publicId}`, {
+    await store.waitForApiClientReady()
+
+    const response = await store.apiClient!.patch(`/api/guestbook/${gb.publicId}`, {
       title: editedTitle.value,
     })
 
@@ -48,7 +51,9 @@ async function saveEdit(gb) {
 }
 async function toggleActive(gb) {
   try {
-    const response = await apiClient.patch(`/api/guestbook/${gb.publicId}`, {
+    await store.waitForApiClientReady()
+
+    const response = await store.apiClient!.patch(`/api/guestbook/${gb.publicId}`, {
       isActive: !gb.isActive,
     })
 
@@ -65,11 +70,13 @@ async function createGuestbook() {
   let response
 
   try {
-    response = await apiClient.post('/api/guestbook', {
+    await store.waitForApiClientReady()
+
+    response = await store.apiClient!.post('/api/guestbook', {
       title: inputTitle.value,
     })
 
-    store.joinGuestbookRoom(response.data.publicId)
+    // store.joinGuestbookRoom(response.data.publicId)
 
     store.guestBooks.push(response.data)
     inputTitle.value = '' //reset inpu title
@@ -81,15 +88,15 @@ async function deleteGuestbook(gb: GuestBook) {
   if (!confirm(`Delete "${gb.title}"? This cannot be undone.`)) return
 
   try {
-    await apiClient.delete(`/api/guestbook/${gb.publicId}`, {
-      headers: { 'x-socket-id': store.socketId },
-    })
+    await store.waitForApiClientReady()
+
+    await store.apiClient!.delete(`/api/guestbook/${gb.publicId}`)
     store.guestBooks = store.guestBooks.filter((g) => g.publicId !== gb.publicId)
 
     //socketIO
-    store.leaveGuestBook([gb.publicId])
-    store.currentlyViewingGuestBook = null
-    store.currentlyViewingGuestBookId = ''
+    // store.leaveGuestBook([gb.publicId])
+    // store.currentlyViewingGuestBook = null
+    // store.currentlyViewingGuestBookId = ''
   } catch (err) {
     console.error('Failed to delete guestbook', err)
   }
@@ -98,6 +105,8 @@ async function deleteGuestbook(gb: GuestBook) {
 function setCurrGB_switchPage(gb: GuestBook) {
   store.currentlyViewingGuestBook = gb // only needed for tracking deletion
   store.currentPage = 'gallery'
+
+  //TODO: preload galleryitems here
 }
 
 // filehandling
@@ -127,7 +136,9 @@ async function submitPatch(gb: GuestBook) {
       formData.append('image', selectedFile.value)
     }
 
-    const response = await apiClient.patch(`/api/guestbook/${gb.publicId}`, formData, {
+    await store.waitForApiClientReady()
+
+    const response = await store.apiClient!.patch(`/api/guestbook/${gb.publicId}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -153,7 +164,7 @@ async function submitPatch(gb: GuestBook) {
 
 <template>
   <div class="hero">
-    {{ store.socketId }}
+    {{ store.socket!.id }}
     <section class="inputNewGuestBook">
       <h2>
         New GuestBook<span class="blueQuestionmark" @click="showExplanation = !showExplanation"

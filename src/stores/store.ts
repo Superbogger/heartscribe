@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { v4 as uuidv4 } from 'uuid'
-import apiClient from '@/services/apiClient'
 import { io, Socket } from 'socket.io-client'
+import axios, { type AxiosInstance } from 'axios'
 
 const URL = 'http://localhost:3003' // adjust to your backend
 
@@ -58,7 +58,8 @@ export const useStore = defineStore('mainStore', {
     currentUserName: '',
     //current one beeing viewed
     currentlyViewingGuestBook: {} as GuestBook | null,
-    currentlyViewingGuestBookId: '' as string,
+    currentlyViewingGuestBookId: '' as string, //needed for unregistering socket-IO room
+    currentlyViewingGuestEntries: [] as GuestEntry[],
 
     entryIDCounter: 0,
     currentPage: null as GuestPage | null,
@@ -68,8 +69,10 @@ export const useStore = defineStore('mainStore', {
     currentGuestName: '',
 
     //guestentry -> computed
-    socket: io(URL) as Socket,
-    socketId: '' as string,
+
+    socket: null as Socket | null,
+    apiClient: null as AxiosInstance | null,
+    isConnected: false,
   }),
 
   //get computed properties  combine state + business logic
@@ -77,6 +80,13 @@ export const useStore = defineStore('mainStore', {
     ownsCurrentGuestbook(state): boolean {
       if (!state.loggedIn) return false
       return state.guestBooks.some((gb) => gb._id === state.currentlyViewingGuestBook!._id)
+    },
+
+    //This computed builds a safe, full image URL for your guestbook header image
+    computeImageURL(state): string {
+      const img = state.currentlyViewingGuestBook?.imageUrl
+      if (!img) return ''
+      return img.startsWith('http') ? img : `${import.meta.env.VITE_BACKEND_URL}${img}`
     },
 
     isCurrentGBactive(state): boolean {
@@ -101,6 +111,75 @@ export const useStore = defineStore('mainStore', {
 
   //mutate state, api requests
   actions: {
+    setupWebSocketAndAPIClient() {
+      this.socket = io(URL) //autoconnect
+
+      this.socket.on('connect', () => {
+        if (!this.socket) {
+          console.error('Socket error on connection')
+          return
+        }
+
+        // CRITICAL STEP: Create the Axios instance only AFTER we have the socket ID
+        this.apiClient = axios.create({
+          baseURL: 'http://localhost:3001/',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-socket-id': this.socket.id,
+          },
+        })
+
+        this.apiClient.interceptors.request.use((config) => {
+          const token = localStorage.getItem('heartscribe_user_token')
+          if (token) {
+            config.headers.Authorization = `Bearer ${token}`
+          }
+          return config
+        })
+
+        this.isConnected = true
+        // this.callGetAllDishes(); // Now it's safe to fetch initial data
+      })
+
+      this.socket.on('disconnect', () => {
+        console.log('Socket.IO connection lost.')
+        this.isConnected = false
+      })
+
+      // --- CLEAN EVENT LISTENERS ---
+
+      //ENTRY CREATE
+      this.socket.on('guestentry:created', (data) => {
+        console.log("'create' Entry event received:", data)
+        this.handleEntryCreate(data)
+      })
+
+      //ENTRY DELETE
+      this.socket.on('guestentry:deleted', (data) => {
+        console.log("'delete' Entry event received:", data)
+        this.handleEntryDelete(data)
+      })
+
+      //GUESTBOOK DELETE
+      this.socket.on('guestbook:deleted', (data) => {
+        console.log('Guestbook delete-event received:', data)
+        this.handleGuestBookDelete(data.payload._id)
+      })
+
+      this.socket.on('connect_error', (err) => {
+        console.error('Socket.IO connection error:', err.message)
+        // this.latestErrorMessage = `Failed to connect to real-time server: ${err.message}`;
+      })
+    },
+
+    handleEntryCreate(data: GuestEntry) {
+      this.currentlyViewingGuestEntries.push(data)
+    },
+
+    handleEntryDelete(payload: string) {},
+
+    handleGuestBookDelete(payload: string) {},
+
     // SOCKET IO ---------------------------------------------------------------------------
     disconnectSocket() {
       if (this.socket && this.socket.connected) {
@@ -127,32 +206,14 @@ export const useStore = defineStore('mainStore', {
       }
     },
 
-    onSocketConnected(callback: (id: string) => void) {
-      if (this.socket) {
-        if (this.socket.connected && this.socket.id) {
-          callback(this.socket.id)
-        }
-        this.socket.on('connect', () => {
-          if (this.socket && this.socket.id) {
-            callback(this.socket.id)
-          }
-        })
-      }
-    },
-
-    connectSocket() {
-      if (!this.socket.connected) {
-        this.socket.connect()
-      }
-    },
-
     logout() {
       localStorage.removeItem('heartscribe_user_token')
       this.userToken = ''
       this.loggedIn = false
       this.currentUserName = ''
-      const personalGuestBooksID = this.guestBooks.map((gb) => gb.publicId)
-      this.leaveGuestBook(personalGuestBooksID)
+
+      // const personalGuestBooksID = this.guestBooks.map((gb) => gb.publicId)
+      // this.leaveGuestBook(personalGuestBooksID)
     },
 
     registerCurrentlyViewing(publicId_new: string) {
@@ -188,9 +249,8 @@ export const useStore = defineStore('mainStore', {
     },
 
     init() {
-      this.onSocketConnected((id) => {
-        this.socketId = id
-      })
+      this.setupWebSocketAndAPIClient()
+
       const saved = localStorage.getItem('wedding_guest_token')
       if (saved) {
         this.uuid = saved
@@ -200,6 +260,11 @@ export const useStore = defineStore('mainStore', {
       }
     },
 
+    async waitForApiClientReady() {
+      while (!this.apiClient) {
+        await new Promise((resolve) => setTimeout(resolve, 100))
+      }
+    },
     //---------------------------------------------------
     //METHODS THAT SHOULD BE CALLED WHEN USER IS LOGGED IN
     // - AdminLoggedInView
@@ -208,7 +273,9 @@ export const useStore = defineStore('mainStore', {
       if (!token) return
       //reauth if page is beeing refreshed
       try {
-        const res = await apiClient.get('/api/user/me')
+        await this.waitForApiClientReady()
+
+        const res = await this.apiClient!.get('/api/user/me')
         this.loggedIn = true
         this.currentUserName = res.data.name
       } catch {
@@ -221,7 +288,9 @@ export const useStore = defineStore('mainStore', {
     async loadOwnedGuestbooks() {
       if (this.loggedIn) {
         try {
-          const response = await apiClient.get('/api/guestbook')
+          await this.waitForApiClientReady()
+
+          const response = await this.apiClient!.get('/api/guestbook')
           this.guestBooks = response.data
         } catch (err) {
           console.log('Error fetching guestbooks for user:' + this.currentUserName, err)

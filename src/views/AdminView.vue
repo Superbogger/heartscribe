@@ -10,7 +10,6 @@ import { useStore } from '@/stores/store'
 const store = useStore()
 const inputUsername = ref('')
 const inputPassword = ref('')
-import apiClient from '@/services/apiClient'
 
 const isLoading = ref(false)
 
@@ -41,7 +40,9 @@ async function loginUser() {
   isLoading.value = true
   latestErrorMessage.value = ''
   try {
-    const response = await apiClient.post('api/user/login', {
+    await store.waitForApiClientReady()
+
+    const response = await store.apiClient!.post('api/user/login', {
       username: inputUsername.value,
       password: inputPassword.value,
     })
@@ -64,7 +65,9 @@ async function registerUser() {
   isLoading.value = true
   latestErrorMessage.value = ''
   try {
-    const response = await apiClient.post('api/user/', {
+    await store.waitForApiClientReady()
+
+    const response = await store.apiClient!.post('api/user/', {
       username: inputUsername.value,
       password: inputPassword.value,
     })

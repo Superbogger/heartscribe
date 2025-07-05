@@ -2,7 +2,6 @@
 import { useStore } from '@/stores/store'
 import { onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import apiClient from '@/services/apiClient'
 
 import Welcome from './UserView_welc1.vue'
 import Whois from './UserView_whois2.vue'
@@ -20,7 +19,9 @@ onMounted(async () => {
   await store.loadOwnedGuestbooks()
 
   try {
-    const response = await apiClient.get(`/api/guestbook/${publicId}`)
+    await store.waitForApiClientReady()
+
+    const response = await store.apiClient!.get(`/api/guestbook/${publicId}`)
     store.currentlyViewingGuestBook = response.data
 
     store.registerCurrentlyViewing(response.data.publicId) // register/unregister of the guestbook beeing actively viewed

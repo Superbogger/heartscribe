@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import ImageUpload from '@/components/ImageUploadButton.vue'
 import { ref } from 'vue'
-import axios from 'axios'
-import { computed } from 'vue'
 import { onMounted } from 'vue'
 
 import { useStore } from '@/stores/store'
@@ -15,6 +13,8 @@ function handleFile(file: File) {
 }
 
 onMounted(async () => {
+  console.log('Ive been switched to: COMMIT')
+
   if (store.loggedIn) {
     store.currentGuestName = store.currentUserName
   }
@@ -31,18 +31,15 @@ async function addEntryWithImage() {
     formData.append('image', selectedFile.value)
   }
 
-  // await apiClient.delete(`/api/guest-entries/${gb.publicId}/${entryID}`, {
-  //     headers: { 'x-socket-id': store.socketId },
-  //   })
-
   try {
-    const response = await axios.post(
-      `http://localhost:3001/api/guest-entries/${store.currentlyViewingGuestBook!.publicId}`,
+    await store.waitForApiClientReady()
+
+    await store.apiClient!.post(
+      `/api/guest-entries/${store.currentlyViewingGuestBook!.publicId}`,
       formData,
       {
         headers: {
           'Content-Type': 'multipart/form-data',
-          'x-socket-id': store.socketId,
         },
       },
     )
@@ -56,18 +53,14 @@ async function addEntryWithImage() {
 
 const comment = ref('')
 
-const guestbook = computed(() => store.currentlyViewingGuestBook)
-const imageUrl = computed(() => {
-  const img = guestbook.value?.imageUrl
-  if (!img) return ''
-  return img.startsWith('http') ? img : `${import.meta.env.VITE_BACKEND_URL}${img}`
-})
+// const guestbook = computed(() => )
+// const imageUrl = computed(() => {
 </script>
 
 <template>
   <div class="hero">
-    <header class="header" :style="{ backgroundImage: `url('${imageUrl}')` }">
-      <h1>{{ guestbook!.headerText }}</h1>
+    <header class="header" :style="{ backgroundImage: `url('${store.computeImageURL}')` }">
+      <h1>{{ store.currentlyViewingGuestBook!.headerText }}</h1>
     </header>
 
     <main class="main">
