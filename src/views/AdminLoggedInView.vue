@@ -105,8 +105,6 @@ async function deleteGuestbook(gb: GuestBook) {
 function setCurrGB_switchPage(gb: GuestBook) {
   store.currentlyViewingGuestBook = gb // only needed for tracking deletion
   store.currentPage = 'gallery'
-
-  //TODO: preload galleryitems here
 }
 
 // filehandling

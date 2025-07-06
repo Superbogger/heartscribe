@@ -3,25 +3,6 @@ import { useStore } from '@/stores/store'
 
 import GalleryItem from '@/components/GalleryItem.vue'
 const store = useStore()
-import { onMounted } from 'vue'
-
-//const guestbook = computed(() => store.currentlyViewingGuestBook)
-
-onMounted(async () => {
-  console.log('Ive been switched to: GALLERY')
-
-  try {
-    await store.waitForApiClientReady()
-
-    const response = await store.apiClient!.get(
-      `/api/guest-entries/${store.currentlyViewingGuestBook!.publicId}`,
-    )
-    store.currentlyViewingGuestEntries = response.data
-    console.log('fetched stuff:', response.data)
-  } catch (err) {
-    console.error('Failed to load gallery entries', err)
-  }
-})
 
 //adapt servseide function
 async function handleDelete(entryID: string) {
@@ -33,11 +14,8 @@ async function handleDelete(entryID: string) {
 
   try {
     await store.waitForApiClientReady()
-
     await store.apiClient!.delete(`/api/guest-entries/${gb.publicId}/${entryID}`)
-    store.currentlyViewingGuestEntries = store.currentlyViewingGuestEntries.filter(
-      (e) => e._id !== entryID,
-    )
+    store.handleEntryDelete(entryID)
   } catch (err) {
     console.error('Failed to delete guest entry:', err)
   }

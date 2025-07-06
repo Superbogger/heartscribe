@@ -2,6 +2,7 @@
 import { useStore } from '@/stores/store'
 import { onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { watch } from 'vue'
 
 import Welcome from './UserView_welc1.vue'
 import Whois from './UserView_whois2.vue'
@@ -13,6 +14,18 @@ const store = useStore()
 const route = useRoute()
 const router = useRouter()
 
+//handleGuestBookDelete
+//reactive fallback to safe page if guestbook has been deleted
+watch(
+  () => store.currentlyViewingGuestBook,
+  (newVal) => {
+    if (newVal === null) {
+      store.goTo('guest-landing')
+      router.push('/guest')
+    }
+  },
+)
+
 onMounted(async () => {
   const publicId = route.params.guestBookID as string
   await store.reAuth()
@@ -21,10 +34,26 @@ onMounted(async () => {
   try {
     await store.waitForApiClientReady()
 
+    //GET current GB
     const response = await store.apiClient!.get(`/api/guestbook/${publicId}`)
     store.currentlyViewingGuestBook = response.data
 
-    store.registerCurrentlyViewing(response.data.publicId) // register/unregister of the guestbook beeing actively viewed
+    // register/unregister of the guestbook (cleanup)
+    // assert guest has only registered to one GB at any time
+    store.registerCurrentlyViewing(response.data.publicId)
+
+    //GET current Entries
+    try {
+      await store.waitForApiClientReady()
+
+      const response = await store.apiClient!.get(
+        `/api/guest-entries/${store.currentlyViewingGuestBook!.publicId}`,
+      )
+      store.currentlyViewingGuestEntries = response.data
+      console.log('fetched stuff:', response.data)
+    } catch (err) {
+      console.error('Failed to load gallery entries', err)
+    }
 
     // Redirect to child route if directly at /guest/:id
     if (route.path === `/guest/${publicId}`) {

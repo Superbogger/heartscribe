@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useStore } from '@/stores/store'
 // import HomeView from '../views/AdminView.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -8,8 +9,8 @@ const router = createRouter({
       name: 'admin-login',
       component: () => import('../views/AdminView.vue'),
       beforeEnter: (to, from, next) => {
-        const token = localStorage.getItem('heartscribe_user_token')
-        if (token) return next('/user') // redirect logged-in user to admin page
+        const store = useStore()
+        if (store.loggedIn) return next('/user') // redirect logged-in user to admin page
         next()
       },
     },
@@ -18,8 +19,8 @@ const router = createRouter({
       name: 'admin-panel',
       component: () => import('../views/AdminLoggedInView.vue'),
       beforeEnter: (to, from, next) => {
-        const token = localStorage.getItem('heartscribe_user_token')
-        if (!token) return next({ name: 'admin-login' }) // redirect !loggedin user to
+        const store = useStore()
+        if (!store.loggedIn) return next({ name: 'admin-login' }) // redirect !loggedin user to
         next()
       },
     },

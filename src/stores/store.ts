@@ -62,7 +62,7 @@ export const useStore = defineStore('mainStore', {
     currentlyViewingGuestEntries: [] as GuestEntry[],
 
     entryIDCounter: 0,
-    currentPage: null as GuestPage | null,
+    currentPage: 'welcome' as GuestPage | null,
 
     //GUEST
     uuid: '', //standard uuid -> inserted at UserView_commit3.vue
@@ -163,7 +163,7 @@ export const useStore = defineStore('mainStore', {
       //GUESTBOOK DELETE
       this.socket.on('guestbook:deleted', (data) => {
         console.log('Guestbook delete-event received:', data)
-        this.handleGuestBookDelete(data.payload._id)
+        this.handleGuestBookDelete(data)
       })
 
       this.socket.on('connect_error', (err) => {
@@ -172,13 +172,30 @@ export const useStore = defineStore('mainStore', {
       })
     },
 
-    handleEntryCreate(data: GuestEntry) {
-      this.currentlyViewingGuestEntries.push(data)
+    //apiNote: dually purposed REST + SocketIO broadcastreceiver
+    handleEntryCreate(guestEntry: GuestEntry) {
+      this.currentlyViewingGuestEntries.push(guestEntry)
     },
 
-    handleEntryDelete(payload: string) {},
+    //apiNote: dually purposed REST + SocketIO broadcastreceiver
+    handleEntryDelete(guestEntryID_deleted: string) {
+      this.currentlyViewingGuestEntries = this.currentlyViewingGuestEntries.filter(
+        (e) => e._id !== guestEntryID_deleted,
+      )
+    },
 
-    handleGuestBookDelete(payload: string) {},
+    handleGuestBookDelete(guestbookID_deleted: string) {
+      if (guestbookID_deleted !== this.currentlyViewingGuestBookId) {
+        console.warn('Delete event for unrelated guestbook, ignoring')
+        return
+        //a watcher redirects us to the guest landing Page (see GuestView.vue)
+      }
+
+      this.leaveGuestBook([guestbookID_deleted])
+      this.currentlyViewingGuestBookId = ''
+      this.currentlyViewingGuestBook = null
+      this.currentlyViewingGuestEntries = [] as GuestEntry[]
+    },
 
     // SOCKET IO ---------------------------------------------------------------------------
     disconnectSocket() {
@@ -248,7 +265,7 @@ export const useStore = defineStore('mainStore', {
       return this.guestBooks.some((gb) => gb.publicId === guestBookID)
     },
 
-    init() {
+    async init() {
       this.setupWebSocketAndAPIClient()
 
       const saved = localStorage.getItem('wedding_guest_token')

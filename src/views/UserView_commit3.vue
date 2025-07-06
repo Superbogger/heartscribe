@@ -34,7 +34,7 @@ async function addEntryWithImage() {
   try {
     await store.waitForApiClientReady()
 
-    await store.apiClient!.post(
+    const response = await store.apiClient!.post(
       `/api/guest-entries/${store.currentlyViewingGuestBook!.publicId}`,
       formData,
       {
@@ -43,6 +43,8 @@ async function addEntryWithImage() {
         },
       },
     )
+    //dually purposed handleCreate (see store.ts)
+    store.handleEntryCreate(response.data)
 
     comment.value = ''
     selectedFile.value = null
