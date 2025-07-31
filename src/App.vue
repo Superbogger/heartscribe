@@ -3,19 +3,7 @@ import { RouterLink, RouterView } from 'vue-router'
 // import UserView_welc1 from '@/views/UserView_welc1.vue'
 
 import { useStore } from '@/stores/store'
-import { onMounted } from 'vue'
 const store = useStore()
-
-// onMounted(() => {
-//   console.log('I run only once 🐗🐗🐗😋😋😋😋')
-
-//   try {
-//     store.init() //give a unique tracker UUID per user
-//     store.reAuth() // check if already logged in / valid token
-//   } catch (err) {
-//     console.error(err)
-//   }
-// })
 </script>
 
 <template>

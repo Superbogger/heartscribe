@@ -48,6 +48,7 @@ const goToGuestbook = async () => {
       addError(`Guestbook not found: ${publicId}`)
     }
   } catch (err) {
+    console.log(err)
     addError(`Incorrect GuestBook ID: ${publicId}`)
   }
 

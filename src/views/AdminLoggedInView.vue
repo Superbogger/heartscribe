@@ -8,6 +8,7 @@ const inputTitle = ref('')
 const showExplanation = ref(false)
 
 onMounted(async () => {
+  store.currentPage = 'admin-panel'
   await store.reAuth()
 
   //fill owned guestbooks
@@ -16,9 +17,6 @@ onMounted(async () => {
 
     const response = await store.apiClient!.get('/api/guestbook')
     store.guestBooks = response.data
-
-    // const guestbookInterests = store.guestBooks.map((gb) => gb.publicId)
-    // store.joinGuestbookRooms(guestbookInterests)
   } catch (err) {
     console.error('Failed to load guestbooks', err)
   }
@@ -27,16 +25,16 @@ onMounted(async () => {
 // new local state for editing
 const editingId = ref<string | null>(null)
 const editedTitle = ref('')
-function startEdit(gb) {
+function startEdit(gb: GuestBook) {
   editingId.value = gb.publicId
   editedTitle.value = gb.title
 }
 
-async function saveEdit(gb) {
+async function saveEdit(gb: GuestBook) {
   try {
     await store.waitForApiClientReady()
 
-    const response = await store.apiClient!.patch(`/api/guestbook/${gb.publicId}`, {
+    await store.apiClient!.patch(`/api/guestbook/${gb.publicId}`, {
       title: editedTitle.value,
     })
 
@@ -49,11 +47,11 @@ async function saveEdit(gb) {
     console.error('Update failed', err)
   }
 }
-async function toggleActive(gb) {
+async function toggleActive(gb: GuestBook) {
   try {
     await store.waitForApiClientReady()
 
-    const response = await store.apiClient!.patch(`/api/guestbook/${gb.publicId}`, {
+    await store.apiClient!.patch(`/api/guestbook/${gb.publicId}`, {
       isActive: !gb.isActive,
     })
 
@@ -162,7 +160,6 @@ async function submitPatch(gb: GuestBook) {
 
 <template>
   <div class="hero">
-    {{ store.socket!.id }}
     <section class="inputNewGuestBook">
       <h2>
         New GuestBook<span class="blueQuestionmark" @click="showExplanation = !showExplanation"

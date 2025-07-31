@@ -1,3 +1,5 @@
+//bootstrapping the application, runs before App.vue
+
 import './assets/main.css'
 
 import { createApp } from 'vue'

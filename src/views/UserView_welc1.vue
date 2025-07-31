@@ -2,15 +2,11 @@
 import { useStore } from '@/stores/store'
 const store = useStore()
 
-// !store.currentlyViewingGuestBook!.isActive || store.ownsCurrentGuestbook
-
 const onEnterClick = () => {
   if (!store.isAllowedAccess) return
   store.goTo('whois')
 }
 </script>
-
-//TODO color changes for disabled //ALLOW Owning user to still access normally too
 
 <template>
   <div class="hero" :style="{ backgroundImage: `url('${store.computeImageURL}')` }">

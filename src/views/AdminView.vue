@@ -1,23 +1,153 @@
 <script setup lang="ts">
-// import TheWelcome from '../components/TheWelcome.vue'
 import { AxiosError } from 'axios'
 import { useRouter } from 'vue-router'
+import { ref } from 'vue'
+import { useStore } from '@/stores/store'
+import { onMounted } from 'vue'
+
+const store = useStore()
 const router = useRouter()
 
-import { ref } from 'vue'
+// CHANGED: emoji background logic
+const containerRef = ref<HTMLElement | null>(null)
+const emojis = [
+  // Hearts (yours plus a few extras)
+  '❤️',
+  '🧡',
+  '💛',
+  '💚',
+  '💙',
+  '💜',
+  '🖤',
+  '🤍',
+  '🤎',
+  '💖',
+  '💗',
+  '💘',
+  '💝',
+  '💕',
+  '💞',
+  '💓',
+  'λ',
+  '💌',
+  '❣️',
 
-import { useStore } from '@/stores/store'
-const store = useStore()
+  // Animals
+  '🐶',
+  '🐱',
+  '🐭',
+  '🐰',
+  '🦊',
+  '🐻',
+  '🐼',
+  '🐨',
+  '🐯',
+  '🐒',
+  '🦄',
+  '🐥',
+  '🐸',
+  '🐧',
+  '🐢',
+  '🐞',
+  '🐝',
+  '🦋',
+  '🐙',
+  '🐳',
+
+  // Flowers and nature
+  '🌸',
+  '🌼',
+  '🌻',
+  '🌺',
+  '🌹',
+  '🌷',
+  '🍀',
+  '🌿',
+  '🍃',
+
+  // Sparkles and stars
+  '✨',
+  '💫',
+  '⭐',
+  '🌟',
+  '🪄',
+
+  // Other cute/fun
+  '🎀',
+  '🎁',
+  '🧸',
+  '🎈',
+  '🍭',
+  '🍬',
+  '🍓',
+  '🍒',
+]
+
+//for spacing sequential emojis
+let lastHorizontalPos: number | null
+
+//Function to spawn a single emoji
+function spawnEmoji() {
+  if (!containerRef.value) return
+
+  const emoji = emojis[Math.floor(Math.random() * emojis.length)]
+  const span = document.createElement('span')
+  span.textContent = emoji
+
+  span.style.position = 'absolute'
+  span.style.fontSize = `${3 + Math.random() * 3}rem`
+  span.style.opacity = '0.4'
+  // User shouldn't be able to select the emoji text
+  span.style.userSelect = 'none'
+  // Prevent the emoji from intercepting any mouse events
+  span.style.pointerEvents = 'none'
+
+  let nextPos = Math.random() * 100
+  if (lastHorizontalPos !== null && Math.abs(nextPos - lastHorizontalPos) < 10) {
+    nextPos = (nextPos + 20) % 100
+  }
+  lastHorizontalPos = nextPos
+  span.style.left = `${nextPos}%`
+
+  span.style.top = '110%' // start below screen
+  span.style.transition = 'transform 40s linear'
+
+  // Add the span to the emoji container in the DOM
+  containerRef.value.appendChild(span)
+
+  // Force reflow
+  void span.offsetWidth
+
+  // Animate
+  span.style.transform = `translateY(-150vh) translateX(${Math.random() * 100 - 50}px)`
+
+  // Cleanup after animation
+  setTimeout(() => {
+    span.remove()
+  }, 40000 + 1000)
+}
+
+onMounted(() => {
+  store.currentPage = 'admin-login'
+
+  //EMOJI RELATED
+  // Initially spawn a few
+  for (let i = 0; i < 10; i++) {
+    setTimeout(() => spawnEmoji(), i * 2000)
+  }
+  // Continuously spawn
+  setInterval(() => {
+    spawnEmoji()
+  }, 3000)
+})
+
 const inputUsername = ref('')
 const inputPassword = ref('')
-
 const isLoading = ref(false)
-
-//TODO: remove if not needed
 const latestErrorMessage = ref('')
-
 const errorMessages = ref<string[]>([])
 const justShook = ref(false)
+
 const addError = (msg: string) => {
   if (errorMessages.value.length >= 3) {
     errorMessages.value.shift() // remove oldest if at max
@@ -27,15 +157,13 @@ const addError = (msg: string) => {
   justShook.value = true
   setTimeout(() => {
     justShook.value = false
-  }, 400) // matches the duration of the animation
+  }, 400)
 
-  // Auto-remove this message after 3 seconds
   setTimeout(() => {
     errorMessages.value.shift()
   }, 3000)
 }
 
-//TODO login actions
 async function loginUser() {
   isLoading.value = true
   latestErrorMessage.value = ''
@@ -51,7 +179,7 @@ async function loginUser() {
     store.loggedIn = true
     const token = response.data.token
     localStorage.setItem('heartscribe_user_token', token)
-    router.push('/user') //switch to admin panel
+    router.push('/user')
   } catch (err) {
     addError((err as AxiosError<{ error: string }>)?.response?.data?.error || 'Unknown error')
     latestErrorMessage.value = 'Login failed'
@@ -67,14 +195,12 @@ async function registerUser() {
   try {
     await store.waitForApiClientReady()
 
-    const response = await store.apiClient!.post('api/user/', {
+    await store.apiClient!.post('api/user/', {
       username: inputUsername.value,
       password: inputPassword.value,
     })
 
     await loginUser()
-
-    // Optional: store user ID
   } catch (err) {
     addError((err as AxiosError<{ error: string }>)?.response?.data?.error || 'Unknown error')
     latestErrorMessage.value = 'Registration failed'
@@ -86,10 +212,10 @@ async function registerUser() {
 </script>
 
 <template>
+  <!-- emoji background container -->
+  <div ref="containerRef" class="emoji-background" aria-hidden="true"></div>
   <div class="hero">
     <form v-if="!store.loggedIn" class="form-login" :class="{ shake: justShook }">
-      <!-- //@submit.prevent="authentificateLogin" -->
-
       <div class="loginInputGroup">
         <label for="username">Name:</label>
         <input v-model="inputUsername" type="text" id="username" required />
@@ -112,9 +238,17 @@ async function registerUser() {
 </template>
 
 <style scoped>
-/* * {
-  border: 1px solid salmon;
-} */
+/* CHANGED: emoji background styling */
+.emoji-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh; /* use entire viewwport*/
+  overflow: hidden;
+  z-index: -1; /* Places it behind all other content on the page */
+  pointer-events: none; /*Allows clicks to pass through without blocking UI interactions */
+}
 
 .error-container {
   width: 100%;
@@ -136,7 +270,6 @@ async function registerUser() {
   height: 100vh;
 }
 
-/* LOGIN STYLING  */
 .form-login {
   display: flex;
   flex-wrap: wrap;
@@ -145,7 +278,7 @@ async function registerUser() {
   border: 1px solid #555;
   border-radius: 4px;
   max-width: 700px;
-  margin: auto; /* auto center */
+  margin: auto;
 }
 
 .loginInputGroup {
@@ -181,7 +314,6 @@ async function registerUser() {
 .shake {
   animation: shake 0.4s ease;
 }
-
 @keyframes shake {
   0% {
     transform: translateX(0);

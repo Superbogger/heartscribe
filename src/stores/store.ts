@@ -5,17 +5,6 @@ import axios, { type AxiosInstance } from 'axios'
 
 const URL = 'http://localhost:3003' // adjust to your backend
 
-//STORE THESE THINGS IN PINIA  + owned GUESTBOOKS [] +  ENTRIES[] within selected guestbook
-
-// userToken / guestUUID	Stored in localStorage, unique per guest
-// currentPage	Navigation state (welcome, commit…)
-// loggedIn	Admin login session
-// inputName, inputComment	Temporary input fields
-// guestBookId	Comes from the route, reused via store
-
-// SuperUser, GuestBook form a 1:N relationship
-//SuperUser keeps track of guestbookIDs in guestbooksOwned
-//a guestbook
 export interface User {
   _id: string // unique ID (DB primary key)
   username: string
@@ -47,7 +36,14 @@ export interface GuestEntry {
 }
 
 //current page enum
-export type GuestPage = 'guest-landing' | 'welcome' | 'whois' | 'commit' | 'gallery'
+export type AppPage =
+  | 'admin-login'
+  | 'admin-panel'
+  | 'guest-landing'
+  | 'welcome'
+  | 'whois'
+  | 'commit'
+  | 'gallery'
 
 export const useStore = defineStore('mainStore', {
   state: () => ({
@@ -62,7 +58,7 @@ export const useStore = defineStore('mainStore', {
     currentlyViewingGuestEntries: [] as GuestEntry[],
 
     entryIDCounter: 0,
-    currentPage: 'welcome' as GuestPage | null,
+    currentPage: 'admin-login' as AppPage,
 
     //GUEST
     uuid: '', //standard uuid -> inserted at UserView_commit3.vue
@@ -138,7 +134,6 @@ export const useStore = defineStore('mainStore', {
         })
 
         this.isConnected = true
-        // this.callGetAllDishes(); // Now it's safe to fetch initial data
       })
 
       this.socket.on('disconnect', () => {
@@ -168,7 +163,6 @@ export const useStore = defineStore('mainStore', {
 
       this.socket.on('connect_error', (err) => {
         console.error('Socket.IO connection error:', err.message)
-        // this.latestErrorMessage = `Failed to connect to real-time server: ${err.message}`;
       })
     },
 
@@ -190,10 +184,7 @@ export const useStore = defineStore('mainStore', {
         return
         //a watcher redirects us to the guest landing Page (see GuestView.vue)
       }
-
-      this.leaveGuestBook([guestbookID_deleted])
-      this.currentlyViewingGuestBookId = ''
-      this.currentlyViewingGuestBook = null
+      this.currentlyViewingGuestBook = null //triggers the watcher in GuestView
       this.currentlyViewingGuestEntries = [] as GuestEntry[]
     },
 
@@ -210,12 +201,6 @@ export const useStore = defineStore('mainStore', {
       }
     },
 
-    joinGuestbookRooms(publicIds: string[]) {
-      if (this.socket && this.socket.connected) {
-        this.socket.emit('joinGuestbook', publicIds)
-      }
-    },
-
     leaveGuestBook(publicIds: string[]) {
       if (this.socket && this.socket.connected) {
         console.log('➡️ leaveGuestBook called', publicIds)
@@ -228,18 +213,6 @@ export const useStore = defineStore('mainStore', {
       this.userToken = ''
       this.loggedIn = false
       this.currentUserName = ''
-
-      // const personalGuestBooksID = this.guestBooks.map((gb) => gb.publicId)
-      // this.leaveGuestBook(personalGuestBooksID)
-    },
-
-    registerCurrentlyViewing(publicId_new: string) {
-      if (this.currentlyViewingGuestBookId) {
-        this.leaveGuestBook([this.currentlyViewingGuestBookId])
-      }
-
-      this.joinGuestbookRoom(publicId_new)
-      this.currentlyViewingGuestBookId = publicId_new
     },
 
     // SOCKET IO ---------------------------------------------------------------------------
@@ -315,46 +288,9 @@ export const useStore = defineStore('mainStore', {
         }
       }
     },
-    //---------------------------------------------------
 
-    // THIS VARIANT CONSTITUTES A COMPOSITE LOCALSTORAGE ITEM (remember username)
-    // init() {
-    //   const raw = localStorage.getItem('wedding_guest_token')
-    //   if (raw) {
-    //     const parsed = JSON.parse(raw)
-    //     this.uuid = parsed.uuid
-    //     this.currentGuestName = parsed.name
-    //   } else {
-    //     this.uuid = uuidv4()
-    //     this.currentGuestName = ''
-    //     localStorage.setItem(
-    //       'wedding_guest_token',
-    //       JSON.stringify({
-    //         uuid: this.uuid,
-    //         name: this.currentGuestName,
-    //       }),
-    //     )
-    //   }
-    // },
-    // attachNameToToken(name: string) {
-    //   this.currentGuestName = name
-    //   localStorage.setItem(
-    //     'wedding_guest_token',
-    //     JSON.stringify({
-    //       uuid: this.uuid,
-    //       name: this.currentGuestName,
-    //     }),
-    //   )
-    // },
-
-    goTo(page: GuestPage) {
+    goTo(page: AppPage) {
       this.currentPage = page
-    },
-
-    reset() {
-      localStorage.removeItem('heartscribe_user_token')
-      this.userToken = ''
-      this.currentPage = 'welcome'
     },
   },
 })

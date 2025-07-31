@@ -41,7 +41,7 @@ async function handleDelete(entryID: string) {
           @delete="() => handleDelete(entry._id)"
         />
       </div>
-      <!-- v-for loop and display all entries as boxes .. TODO component -->
+      <!-- v-for loop and display all entries as boxes ... -->
     </main>
 
     <footer class="footer">

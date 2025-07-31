@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useStore } from '@/stores/store'
-import { onMounted } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { watch } from 'vue'
 
@@ -14,19 +14,32 @@ const store = useStore()
 const route = useRoute()
 const router = useRouter()
 
-//handleGuestBookDelete
-//reactive fallback to safe page if guestbook has been deleted
+// Handle guestbook deletion: reactive fallback to safe page
+const guestBookDetailPages = new Set(['welcome', 'whois', 'commit', 'gallery'])
 watch(
   () => store.currentlyViewingGuestBook,
   (newVal) => {
-    if (newVal === null) {
+    if (newVal === null && guestBookDetailPages.has(store.currentPage)) {
       store.goTo('guest-landing')
       router.push('/guest')
     }
   },
 )
 
+onUnmounted(() => {
+  if (store.currentlyViewingGuestBookId) {
+    //if-guard for DELETION REDIRECT: see  handleGuestBookDelete
+    store.leaveGuestBook([store.currentlyViewingGuestBookId])
+    store.currentlyViewingGuestBookId = ''
+  }
+})
+
 onMounted(async () => {
+  // If coming from any other path than GuestPath default to "welcome"
+  if (!guestBookDetailPages.has(store.currentPage)) {
+    store.currentPage = 'welcome'
+  }
+
   const publicId = route.params.guestBookID as string
   await store.reAuth()
   await store.loadOwnedGuestbooks()
@@ -39,8 +52,8 @@ onMounted(async () => {
     store.currentlyViewingGuestBook = response.data
 
     // register/unregister of the guestbook (cleanup)
-    // assert guest has only registered to one GB at any time
-    store.registerCurrentlyViewing(response.data.publicId)
+    store.joinGuestbookRoom(response.data.publicId)
+    store.currentlyViewingGuestBookId = publicId
 
     //GET current Entries
     try {
