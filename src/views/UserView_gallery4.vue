@@ -57,10 +57,9 @@ async function handleDelete(entryID: string) {
 
 <style scoped>
 .entry-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  justify-content: flex-start;
+  column-count: 3;
+  column-gap: 1rem;
+  padding: 1rem;
 }
 
 .hero {
@@ -146,5 +145,17 @@ async function handleDelete(entryID: string) {
 
 .gallery-fab .label {
   font-size: 0.9rem;
+}
+
+@media (max-width: 900px) {
+  .entry-grid {
+    column-count: 2;
+  }
+}
+
+@media (max-width: 600px) {
+  .entry-grid {
+    column-count: 1;
+  }
 }
 </style>

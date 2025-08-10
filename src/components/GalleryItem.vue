@@ -33,15 +33,15 @@ const fullImageUrl = computed(() =>
 
 <style scoped>
 .card {
+  display: inline-block; /* Must be inline-block for column layout */
+  width: 100%;
   background: white;
   border-radius: 10px;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  max-width: 280px;
-  width: 100%;
-  position: relative; /* Required for absolute delete button */
+  margin-bottom: 1rem;
+  position: relative;
+  break-inside: avoid; /* Prevents breaking card across columns */
 }
 
 /* .delete-btn {
