@@ -1,45 +1,81 @@
-# heartscribe
+# HeartScribe – Frontend
 
-This template should help get you started developing with Vue 3 in Vite.
+The HeartScribe Frontend is a responsive web application built with Vue 3 and TypeScript. It provides a user interface for managing guestbooks, submitting entries, and viewing content in real time. The application integrates seamlessly with the HeartScribe backend via RESTful APIs and WebSockets.
 
-## Recommended IDE Setup
+## Features
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- User login and registration interface
+- Create and manage guestbooks
+- Submit guest entries with optional images
+- Responsive design with mobile-friendly layout
+- Real-time updates through WebSockets
+- Visual feedback for user actions (e.g., shake effect on failed login)
+- Custom floating emoji background effect
 
-## Type Support for `.vue` Imports in TS
+## Technologies Used
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+- Vue 3 (Options API)
+- TypeScript
+- Pinia (state management)
+- Vue Router / Stateful Pinia Page switching
+- Axios (HTTP client)
+- Socket.IO Client
+- Vite (development and build tool)
 
-## Customize configuration
+## Project Structure
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+.src<br/>
+├── components/ # Reusable Vue components <br/>
+├── views/ # Page views (login, user, admin, etc.) <br/>
+├── stores/ # Pinia store modules <br/>
+├── services/ # Axios and helper services <br/>
+├── assets/ # Static assets and images (optional) <br/>
+├── App.vue # Root component <br/>
+├── main.ts # App entry point <br/>
+├── router.ts # Vue Router setup <br/>
 
-## Project Setup
+- **Registered Users**
 
-```sh
+  - Can create and manage multiple guestbooks.
+  - Can share automatically generated guestbook links with friends.
+
+- **Visitors**
+  - Can post text messages (optionally with images) to a guestbook.
+  - Are guided through a sequence of onboarding steps:
+    1. Guest Welcome Page
+    2. Name Entry Page
+    3. Post Message Page
+    4. Gallery Page
+
+---
+
+You may also watch a brief video demonstration: [https://youtu.be/VJ9aTijd5Rg](https://youtu.be/VJ9aTijd5Rg)
+
+## Getting Started
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/Superbogger/heartscribe-frontend.git
+cd heartscribe-frontend
+```
+
+### 2. Install Dependencies
+
+```bash
 npm install
 ```
 
-### Compile and Hot-Reload for Development
+### 3. Create and adjust a ".env"-file
 
-```sh
+```bash
+VITE_BACKEND_URL=http://localhost:3001
+```
+
+### 4. Install Dependencies
+
+```bash
 npm run dev
-```
-
-### Type-Check, Compile and Minify for Production
-
-```sh
-npm run build
-```
-
-### Run Unit Tests with [Vitest](https://vitest.dev/)
-
-```sh
-npm run test:unit
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
+or
+npm start
 ```
